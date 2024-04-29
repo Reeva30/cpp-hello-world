@@ -1,5 +1,8 @@
 name: Auto Merge inv to dev
 
+permissions:
+  contents: write
+
 on:
   push:
     branches:
