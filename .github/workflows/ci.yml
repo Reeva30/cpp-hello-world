@@ -1,0 +1,21 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: brew install gcc
+    - name: Build project
+      run: g++ -o hello_world main.cpp
+    - name: Run tests
+      run: ./hello_world
+
