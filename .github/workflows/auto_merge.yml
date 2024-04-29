@@ -1,0 +1,32 @@
+name: Auto Merge inv to dev
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - inv
+
+jobs:
+  merge_to_dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: inv
+          fetch-depth: 0  # Ensures history is available for merging
+
+      - name: Set up Git
+        run: |
+          git config user.name 'GitHub Actions'
+          git config user.email 'actions@github.com'
+
+      - name: Merge inv branch to dev
+        run: |
+          git fetch origin dev
+          git checkout dev
+          git merge --no-ff inv -m "Merge branch 'inv' into dev"
+          git push origin dev
+
