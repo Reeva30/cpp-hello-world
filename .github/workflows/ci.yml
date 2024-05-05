@@ -25,6 +25,10 @@ jobs:
         run: |
           cl /EHsc main.cpp /Fe:main.exe
 
+      - name: List Directory Contents (Debugging)
+        run: |
+          dir
+
       - name: Run Executable
         run: |
-          main.exe
+          .\main.exe
