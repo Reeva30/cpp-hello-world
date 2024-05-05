@@ -9,29 +9,27 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and Test on Windows
+    name: Build, Test, and Install Rust on Windows
     runs-on: windows-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Setup MSVC (Visual Studio Build Tools)
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install Rust (v1.76.0)
+        uses: actions-rs/toolchain@v1
         with:
-          arch: x64
-      - name: Download Rustup Installer
-        run: |
-          curl -sSf -o rustup-init.exe https://win.rustup.rs/
-
-      - name: Install Rust (v1.76)
-        run: |
-          .\rustup-init.exe -y --default-toolchain 1.76.0
-          refreshenv
+          toolchain: '1.76.0'
+          override: true
 
       - name: Verify Rust Installation
         run: |
           rustc --version
+
+      - name: Setup MSVC (Visual Studio Build Tools)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Build C++ Code
         run: |
