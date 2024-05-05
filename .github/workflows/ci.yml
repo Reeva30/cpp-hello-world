@@ -37,16 +37,17 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         shell: powershell
         
-     # Download and Install the Qt Unified Installer
-      - name: Download and Install Qt Unified Installer
+      # Install vcpkg (Microsoft's C++ package manager)
+      - name: Install vcpkg
         run: |
-          # Download the Qt unified online installer
-          Invoke-WebRequest -Uri "https://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe" -OutFile "qt-unified-installer.exe"
-          # Perform a silent installation (modify configuration as needed)
-          Start-Process -FilePath "qt-unified-installer.exe" -ArgumentList '--silent --default-answer --platform minimal --root C:\Qt --qt-path 5.15.2\msvc2019_64' -NoNewWindow -Wait
-        shell: powershell
+          git clone https://github.com/microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
 
-        
+      # Install Qt using vcpkg
+      - name: Install Qt with vcpkg
+        run: |
+          .\vcpkg\vcpkg install qt5-base:x64-windows
+          .\vcpkg\vcpkg integrate install
       # Set up Visual Studio command-line environment
       - name: Set up Visual Studio Build Environment
         shell: cmd
@@ -56,7 +57,7 @@ jobs:
       # Ensure that the -S (source) flag points to the root (or subdirectory with CMakeLists.txt)
       - name: Generate Build Files
         run: |
-          cmake -S . -B build -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\msvc2019_64"
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake
 
       # Ensure the build folder is correct
       - name: Build Project
