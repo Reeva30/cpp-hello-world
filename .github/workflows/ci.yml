@@ -1,25 +1,30 @@
-name: C++ CI
+name: Hello World CI
 
 on:
+  # Trigger CI on push and pull request
   push:
     branches: [ inv ]
   pull_request:
     branches: [ inv ]
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and Test on Windows
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Install MSYS2
-      run: |
-        choco install msys2
-        refreshenv
-        C:\tools\msys64\usr\bin\bash.exe -lc "pacman -Sy --noconfirm base-devel mingw-w64-x86_64-toolchain"
-    - name: Build project
-      run: |
-        C:\tools\msys64\usr\bin\bash.exe -lc "g++ -o hello_world.exe main.cpp"
-    - name: Run tests
-      run: |
-        hello_world.exe
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup MSVC (Visual Studio Build Tools)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build C++ Code
+        run: |
+          cl /EHsc hello_world.cpp /Fe:hello_world.exe
+
+      - name: Run Executable
+        run: |
+          hello_world.exe
