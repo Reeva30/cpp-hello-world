@@ -25,23 +25,24 @@ jobs:
         run: |
           rustc --version
 
-      - name: Setup MSBuild and Visual Studio
-        uses: microsoft/setup-msbuild@v1
+      - name: Install CMake
+        uses: twilio/cmake-action@v1
 
-      - name: Verify MSVC Compiler (`cl`)
-        shell: cmd
+      - name: Configure CMake Project
         run: |
-          cl /?
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" ..
 
-      - name: Build C++ Code
-        shell: cmd
+      - name: Build with CMake
         run: |
-          cl /EHsc main.cpp /Fe:main.exe
+          cd build
+          cmake --build . --config Release
 
-      - name: List Directory Contents (Debugging)
+      - name: List Build Directory Contents
         run: |
-          dir
+          dir build\Release
 
       - name: Run Executable
         run: |
-          .\main.exe
+          build\Release\main.exe
