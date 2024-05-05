@@ -35,8 +35,17 @@ jobs:
         run: |
           start /wait vs_buildtools.exe --quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools
 
-      - name: Install CMake
-        uses: lucasrmendes/cmake-setup@v1.0.0
+      - name: Install Chocolatey
+        shell: powershell
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install CMake via Chocolatey
+        shell: cmd
+        run: |
+          choco install cmake --yes
 
       - name: Build C++ Project Using CMake
         run: |
