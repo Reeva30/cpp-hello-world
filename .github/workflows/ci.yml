@@ -1,87 +1,36 @@
-name: Hello World CI
+name: C++ Build and Test
 
 on:
   push:
-    branches: [ inv ]
-  pull_request:
-    branches: [ inv ]
+    branches:
+      - inv
 
 jobs:
-  build-and-test:
-    name: Build, Test, and Install Rust on Windows
+  build:
+    name: Build C++ Code
     runs-on: windows-latest
 
     steps:
-      # Check out the source code
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up Chocolatey
-      - name: Install Chocolatey
+      # Install Visual Studio 2022 with C++ Desktop workload
+      - name: Install Visual Studio 2022
+        run: |
+          choco install visualstudio2022buildtools --version=17.0.0.0 --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
         shell: powershell
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force; `
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
-          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      # Install MSVC tools via Chocolatey
-      - name: Install MSVC Tools
-        run: |
-          choco install visualstudio2022buildtools -y --no-progress
-          choco install vswhere -y --no-progress
-
-      # Find Visual Studio Path with vswhere
-      - name: Find Visual Studio Path
+      - name: Set up MSBuild path
         shell: cmd
         run: |
-          "C:\ProgramData\chocolatey\lib\vswhere\tools\vswhere.exe" -latest -version [17.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\msbuild.exe" /?
 
-      # Set up MSVC environment using the path found
-      - name: Set up MSVC Environment (x64)
+      - name: Build main.cpp
         shell: cmd
         run: |
-          set /p vs_path=<vs_path.txt
-          if not defined vs_path (exit /b 1)
-          call "%vs_path%\VC\Auxiliary\Build\vcvarsall.bat" x64
+          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\msbuild.exe" /t:Build /p:Configuration=Release /p:Platform=x64
 
-      # Cache the Rust toolchain to reduce reinstallation time
-      - name: Cache Rust Toolchain
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo
-
-      # Install Rust via actions-rs toolchain and verify installation
-      - name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: '1.76.0'
-          override: true
-
-      - name: Verify Rust Installation
-        run: |
-          rustc --version
-
-      # Verify `cl` command
-      - name: Verify `cl` Command
+      - name: Run the executable
         shell: cmd
-        run: |
-          cl /?
-
-      # Compile C++ code
-      - name: Build C++ Code
-        shell: cmd
-        run: |
-          cl /EHsc main.cpp /Fe:main.exe
-
-      # List directory contents for verification
-      - name: List Directory Contents
-        run: |
-          dir
-
-      # Run the compiled executable
-      - name: Run Executable
         run: |
           .\main.exe
