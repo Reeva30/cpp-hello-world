@@ -36,7 +36,13 @@ jobs:
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         shell: powershell
-
+        
+      # Install Qt via Chocolatey
+      - name: Install Qt
+        run: |
+          choco install qt5-sdk
+        shell: powershell
+        
       # Set up Visual Studio command-line environment
       - name: Set up Visual Studio Build Environment
         shell: cmd
@@ -46,7 +52,7 @@ jobs:
       # Ensure that the -S (source) flag points to the root (or subdirectory with CMakeLists.txt)
       - name: Generate Build Files
         run: |
-          cmake -S . -B build
+          cmake -S . -B build -DQt5_DIR="C:\Program Files\Qt\5.x\msvc2019_64"
 
       # Ensure the build folder is correct
       - name: Build Project
