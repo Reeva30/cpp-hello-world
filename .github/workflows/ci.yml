@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build, Test, and Install Rust on Windows
+    name: Build, Test, and Install Rust and C++ on Windows
     runs-on: windows-latest
 
     steps:
@@ -35,33 +35,18 @@ jobs:
         run: |
           start /wait vs_buildtools.exe --quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools
 
-      - name: Find Visual Studio Path
-        shell: cmd
-        run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -version [17.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+      - name: Install CMake
+        uses: lucasrmendes/cmake-setup@v1.0.0
 
-      - name: Set up MSVC Environment (x64)
-        shell: cmd
+      - name: Build C++ Project Using CMake
         run: |
-          set /p vs_path=<vs_path.txt
-          if not defined vs_path (exit /b 1)
-          call "%vs_path%\VC\Auxiliary\Build\vcvarsall.bat" x64
-          set
-
-      - name: Verify `cl` Command
-        shell: cmd
-        run: |
-          cl /?
-
-      - name: Build C++ Code
-        shell: cmd
-        run: |
-          cl /EHsc main.cpp /Fe:main.exe
+          cmake -G "Visual Studio 17 2022" -A x64 -B build
+          cmake --build build --config Release
 
       - name: List Directory Contents
         run: |
-          dir
+          dir build
 
       - name: Run Executable
         run: |
-          .\main.exe
+          .\build\Release\main.exe
