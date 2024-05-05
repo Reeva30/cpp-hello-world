@@ -26,13 +26,21 @@ jobs:
         run: |
           rustc --version
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+      - name: Find Visual Studio Path
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -version [17.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+
+      - name: Display Visual Studio Path
+        shell: powershell
+        run: |
+          Get-Content vs_path.txt
 
       - name: Set up MSVC Environment (x64)
         shell: cmd
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+          set /p vs_path=<vs_path.txt
+          call "%vs_path%\VC\Auxiliary\Build\vcvarsall.bat" x64
 
       - name: Build C++ Code
         shell: cmd
@@ -46,5 +54,3 @@ jobs:
       - name: Run Executable
         run: |
           .\main.exe
-
-        
