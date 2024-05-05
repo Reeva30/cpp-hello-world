@@ -26,20 +26,15 @@ jobs:
           rustc --version
 
 
-      - name: Download Visual Studio Build Tools Installer
-        shell: powershell
-        run: |
-          Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vs_BuildTools.exe -OutFile vs_buildtools.exe
-
-      - name: Install Visual Studio 2022 Build Tools
-        shell: cmd
-        run: |
-          start /wait vs_buildtools.exe --quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools
-
-      - name: Find Visual Studio Path
+      - name: Find Pre-installed Visual Studio Path
         shell: cmd
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -version [17.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+
+      - name: Display Visual Studio Path
+        shell: powershell
+        run: |
+          Get-Content vs_path.txt
 
       - name: Set up MSVC Environment (x64)
         shell: cmd
