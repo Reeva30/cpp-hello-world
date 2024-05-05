@@ -20,15 +20,19 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      - name: Download Rustup Installer
+        run: |
+          curl -sSf -o rustup-init.exe https://win.rustup.rs/
+
       - name: Install Rust (v1.76)
         run: |
-          Invoke-WebRequest -Uri https://static.rust-lang.org/rustup/release/stable/x86_64-pc-windows-msvc/rustup-init.exe -OutFile rustup-init.exe
-          Start-Process -FilePath rustup-init.exe -ArgumentList "-y --default-toolchain 1.76.0" -NoNewWindow -Wait
+          .\rustup-init.exe -y --default-toolchain 1.76.0
           refreshenv
 
       - name: Verify Rust Installation
         run: |
           rustc --version
+
       - name: Build C++ Code
         run: |
           cl /EHsc main.cpp /Fe:main.exe
