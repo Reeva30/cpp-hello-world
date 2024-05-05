@@ -14,26 +14,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Install Visual Studio 2022 Build Tools using Chocolatey
+      # Install CMake using Chocolatey
+      - name: Install CMake
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        shell: powershell
+
+      # Install Visual Studio 2022 Build Tools
       - name: Install Visual Studio 2022 Build Tools
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         shell: powershell
 
-      # Set up the Visual Studio command-line environment
+      # Set up Visual Studio command-line environment
       - name: Set up Visual Studio Build Environment
         shell: cmd
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
-      # Compile main.cpp using the cl compiler
-      - name: Compile main.cpp
-        shell: cmd
+      # Run CMake to generate build files
+      - name: Generate Build Files
         run: |
-          cl /EHsc /Fe:main.exe main.cpp
+          cmake -S . -B build
+
+      # Build the project using CMake
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
 
       # Run the executable
       - name: Run the executable
-        shell: cmd
         run: |
-          .\main.exe
+          .\build\Release\main.exe
