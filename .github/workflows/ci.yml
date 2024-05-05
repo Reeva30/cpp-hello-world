@@ -8,14 +8,44 @@ on:
 
 jobs:
   build-and-test:
-    name: Build, Test, and Install Rust and C++ on Windows
+    name: Build, Test, and Install Rust on Windows
     runs-on: windows-latest
 
     steps:
+      # Check out the source code
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Install Rust (v1.76.0)
+      # Set up Chocolatey to install dependencies
+      - name: Install Chocolatey
+        shell: powershell
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      # Install MSVC tools via Chocolatey
+      - name: Install MSVC Tools
+        run: |
+          choco install visualstudio2022buildtools -y --no-progress
+
+      # Set up MSVC environment
+      - name: Set up MSVC Environment (x64)
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+      # Cache the Rust toolchain to reduce reinstallation time
+      - name: Cache Rust Toolchain
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo
+
+      # Install Rust via actions-rs toolchain and verify installation
+      - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: '1.76.0'
@@ -25,37 +55,24 @@ jobs:
         run: |
           rustc --version
 
-      - name: Download Visual Studio Build Tools Installer
-        shell: powershell
-        run: |
-          Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vs_BuildTools.exe -OutFile vs_buildtools.exe
-
-      - name: Install Visual Studio 2022 Build Tools
+      # Verify `cl` command
+      - name: Verify `cl` Command
         shell: cmd
         run: |
-          start /wait vs_buildtools.exe --quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools
+          cl /?
 
-      - name: Install Chocolatey
-        shell: powershell
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force; `
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
-          Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
-      - name: Install CMake via Chocolatey
+      # Compile C++ code
+      - name: Build C++ Code
         shell: cmd
         run: |
-          choco install cmake --yes
+          cl /EHsc main.cpp /Fe:main.exe
 
-      - name: Build C++ Project Using CMake
-        run: |
-          cmake -G "Visual Studio 17 2022" -A x64 -B build
-          cmake --build build --config Release
-
+      # List directory contents for verification
       - name: List Directory Contents
         run: |
-          dir build
+          dir
 
+      # Run the compiled executable
       - name: Run Executable
         run: |
-          .\build\Release\main.exe
+          .\main.exe
