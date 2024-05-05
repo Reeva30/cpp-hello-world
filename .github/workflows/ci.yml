@@ -2,9 +2,9 @@ name: C++ CI
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ inv ]
   pull_request:
-    branches: [ dev ]
+    branches: [ inv ]
 
 jobs:
   build:
@@ -14,24 +14,6 @@ jobs:
     - uses: actions/checkout@v3
     - name: Install dependencies
       run: brew install gcc
-    - name: Set up MSBuild path
-      uses: microsoft/setup-msbuild@v1.1
-    - name: Install Visual Studio
-      uses: egor-tensin/setup-msvc@v1
-      with:
-        version: vs2022
-
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: 1.76.0
-        default: true
-        profile: minimal
-        override: true    
-
-    - name: Build with MSBuild
-      run: msbuild MyProject.sln /p:Configuration=Release /p:Platform="x64"
-      
     - name: Build project
       run: g++ -o hello_world main.cpp
     - name: Run tests
