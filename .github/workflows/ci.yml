@@ -25,15 +25,24 @@ jobs:
       - name: Verify Rust Installation
         run: |
           rustc --version
+          
+      - name: Install Visual Studio 2022 Build Tools
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vs_BuildTools.exe -OutFile vs_buildtools.exe
+          Start-Process -FilePath vs_buildtools.exe -ArgumentList "--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools" -NoNewWindow -Wait
 
-      - name: Setup MSVC (Visual Studio Build Tools)
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+      - name: Verify Visual Studio 2022 Installation
+        run: |
+          "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+          cl /?
 
       - name: Build C++ Code
+        shell: cmd
         run: |
+          "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
           cl /EHsc main.cpp /Fe:main.exe
+
 
       - name: List Directory Contents (Debugging)
         run: |
