@@ -2,8 +2,10 @@ name: C++ Build and Test
 
 on:
   push:
-    branches:
-      - inv
+    branches: [ inv ]
+  pull_request:
+    branches: [ inv ]
+
 
 jobs:
   build:
