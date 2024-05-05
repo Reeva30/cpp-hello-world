@@ -14,10 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Install Visual Studio 2022 with C++ Desktop workload
-      - name: Install Visual Studio 2022
+      # Install Visual Studio 2022 Build Tools using Chocolatey
+      - name: Install Visual Studio 2022 Build Tools
         run: |
-          choco install visualstudio2022buildtools --version=17.0.0.0 --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
+          choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
         shell: powershell
 
       - name: Set up MSBuild path
