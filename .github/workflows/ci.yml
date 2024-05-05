@@ -1,7 +1,6 @@
 name: Hello World CI
 
 on:
-  # Trigger CI on push and pull request
   push:
     branches: [ inv ]
   pull_request:
@@ -31,16 +30,17 @@ jobs:
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -version [17.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
 
-      - name: Display Visual Studio Path
-        shell: powershell
-        run: |
-          Get-Content vs_path.txt
-
       - name: Set up MSVC Environment (x64)
         shell: cmd
         run: |
           set /p vs_path=<vs_path.txt
           call "%vs_path%\VC\Auxiliary\Build\vcvarsall.bat" x64
+          set
+
+      - name: Verify `cl` Command
+        shell: cmd
+        run: |
+          cl /?
 
       - name: Build C++ Code
         shell: cmd
