@@ -25,24 +25,38 @@ jobs:
         run: |
           rustc --version
 
-      - name: Install CMake
-        uses: twilio/cmake-action@v1
 
-      - name: Configure CMake Project
+      - name: Download Visual Studio Installer
+        shell: powershell
         run: |
-          mkdir build
-          cd build
-          cmake -G "Visual Studio 17 2022" ..
+          Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vs_BuildTools.exe -OutFile vs_buildtools.exe
 
-      - name: Build with CMake
+      - name: Install Visual Studio 2022 Build Tools
+        shell: cmd
         run: |
-          cd build
-          cmake --build . --config Release
+          start /wait vs_buildtools.exe --quiet --norestart --wait --add Microsoft.VisualStudio.Workload.VCTools
 
-      - name: List Build Directory Contents
+      - name: Set up MSVC Environment (x64)
+        shell: cmd
         run: |
-          dir build\Release
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -version [17.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+          set /p vs_path=<vs_path.txt
+          call "%vs_path%\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+      - name: Verify `cl` Command
+        shell: cmd
+        run: |
+          cl /?
+
+      - name: Build C++ Code
+        shell: cmd
+        run: |
+          cl /EHsc main.cpp /Fe:main.exe
+
+      - name: List Directory Contents
+        run: |
+          dir
 
       - name: Run Executable
         run: |
-          build\Release\main.exe
+          .\main.exe
