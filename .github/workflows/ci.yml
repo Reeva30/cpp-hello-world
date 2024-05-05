@@ -23,8 +23,8 @@ jobs:
 
       - name: Build C++ Code
         run: |
-          cl /EHsc hello_world.cpp /Fe:hello_world.exe
+          cl /EHsc main.cpp /Fe:main.exe
 
       - name: Run Executable
         run: |
-          hello_world.exe
+          main.exe
