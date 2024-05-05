@@ -32,15 +32,16 @@ jobs:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
-      # Run CMake to generate build files
+      # Ensure that the -S (source) flag points to the root (or subdirectory with CMakeLists.txt)
       - name: Generate Build Files
         run: |
           cmake -S . -B build
 
-      # Build the project using CMake
+      # Ensure the build folder is correct
       - name: Build Project
         run: |
           cmake --build build --config Release
+
 
       # Run the executable
       - name: Run the executable
