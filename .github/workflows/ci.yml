@@ -37,13 +37,13 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         shell: powershell
         
-     # Download and Install Qt
-      - name: Download and Install Qt
+     # Download and Install the Qt Unified Installer
+      - name: Download and Install Qt Unified Installer
         run: |
-          # Download the Qt installer
-          Invoke-WebRequest -Uri "https://download.qt.io/official_releases/qt/5.15/5.15.2/qt-opensource-windows-x86-5.15.2.exe" -OutFile "qt-installer.exe"
-          # Install Qt using silent installation
-          Start-Process -FilePath "qt-installer.exe" -ArgumentList '--silent --default-answer --platform minimal --root C:\Qt --qt-path 5.15.2\msvc2019_64' -NoNewWindow -Wait
+          # Download the Qt unified online installer
+          Invoke-WebRequest -Uri "https://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe" -OutFile "qt-unified-installer.exe"
+          # Perform a silent installation (modify configuration as needed)
+          Start-Process -FilePath "qt-unified-installer.exe" -ArgumentList '--silent --default-answer --platform minimal --root C:\Qt --qt-path 5.15.2\msvc2019_64' -NoNewWindow -Wait
         shell: powershell
 
         
