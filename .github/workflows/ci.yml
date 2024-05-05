@@ -12,10 +12,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Install dependencies
-      run: brew install gcc
+    - name: Install MSYS2
+      run: |
+        choco install msys2
+        refreshenv
+        C:\tools\msys64\usr\bin\bash.exe -lc "pacman -Sy --noconfirm base-devel mingw-w64-x86_64-toolchain"
     - name: Build project
-      run: g++ -o hello_world main.cpp
+      run: |
+        C:\tools\msys64\usr\bin\bash.exe -lc "g++ -o hello_world.exe main.cpp"
     - name: Run tests
-      run: ./hello_world
-
+      run: |
+        hello_world.exe
