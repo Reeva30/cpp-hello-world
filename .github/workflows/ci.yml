@@ -71,6 +71,14 @@ jobs:
           $vcpkgRoot = (Resolve-Path .\vcpkg\installed\x64-windows\lib\cmake\Qt5).Path
           echo $vcpkgRoot
 
+      # Generate build files using CMake and the vcpkg toolchain file
+      - name: Generate Build Files
+        run: |
+          $vcpkgRoot = (.\vcpkg\vcpkg integrate install --dry-run | Select-String -Pattern "Qt5" | ForEach-Object { $_.ToString().Trim() })
+          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake" "-DQt5_DIR=$vcpkgRoot"
+          cmake --build build --config Release
+
+          
       # Install necessary packages via vcpkg
       - name: Install vcpkg packages
         run: |
@@ -88,12 +96,11 @@ jobs:
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
 
-
-
       # Generate build files using CMake and the vcpkg toolchain file
       - name: Generate Build Files
         run: |
-          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake"
+          $vcpkgRoot = (.\vcpkg\vcpkg integrate install --dry-run | Select-String -Pattern "Qt5" | ForEach-Object { $_.ToString().Trim() })
+          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake" "-DQt5_DIR=$vcpkgRoot"
           cmake --build build --config Release
       
           
