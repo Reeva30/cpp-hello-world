@@ -46,12 +46,15 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         shell: powershell
 
-      # Cache vcpkg for subsequent builds
+      # Cache the vcpkg directory
       - name: Cache vcpkg
         uses: actions/cache@v3
         with:
           path: ~/.vcpkg
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}
+
 
       # Clone the vcpkg repository and bootstrap it
       - name: Install vcpkg
