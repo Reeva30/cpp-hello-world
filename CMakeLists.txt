@@ -8,11 +8,5 @@ endif()
 
 set(CMAKE_CXX_STANDARD 11)
 
-# Find the Qt5 package
-find_package(Qt5 COMPONENTS REQUIRED Core)
-
 # Create the executable
 add_executable(main main.cpp)
-
-# Link the Qt5 libraries to the executable
-target_link_libraries(main PRIVATE Qt5::Core)
