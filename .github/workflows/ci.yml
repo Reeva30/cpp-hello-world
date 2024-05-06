@@ -56,15 +56,10 @@ jobs:
       # Generate build files using CMake
       - name: Generate Build Files
         run: |
-          cmake -B build -S .
-          cmake --build build
+          cmake -B . -S .
+          cmake --build . --config Release  # Compile in Release mode
 
-      # Build the project using CMake
-      - name: Build Project
-        run: |
-          cmake --build build
-
-      # Run the resulting executable (adjust path to your specific executable)
+      # Run the resulting executable
       - name: Run the executable
         run: |
-          .\build\main.exe
+          .\main.exe
