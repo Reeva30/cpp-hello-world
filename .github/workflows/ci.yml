@@ -26,7 +26,7 @@ jobs:
           rustc --version
 
 
-       # Cache vcpkg for faster subsequent builds
+        # Cache vcpkg for faster subsequent builds
       - name: Cache vcpkg
         uses: actions/cache@v3
         with:
@@ -45,16 +45,23 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         shell: powershell
 
+      # Download and Install the Qt Visual Studio Tools Extension
+      - name: Install Qt Visual Studio Tools Extension
+        run: |
+          Invoke-WebRequest -Uri "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/qtproject/vsextensions/vstoolsforqt/latest/vsix" -OutFile "QtVsTools.vsix"
+          Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\VSIXInstaller.exe" -ArgumentList '/quiet', 'QtVsTools.vsix' -Wait
+        shell: powershell
+
       # Clone the vcpkg repository and bootstrap vcpkg
       - name: Install vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           .\vcpkg\bootstrap-vcpkg.bat
 
-      # Install Qt with the vcpkg meta-package and enable binary caching
-      - name: Install Qt with vcpkg
+      # Install Qt via vcpkg with only the base package
+      - name: Install Qt Base via vcpkg
         run: |
-          .\vcpkg\vcpkg install qt5:x64-windows --binarycaching
+          .\vcpkg\vcpkg install qt5-base:x64-windows --binarycaching
 
       # Set up the Visual Studio Build Environment
       - name: Set up Visual Studio Build Environment
