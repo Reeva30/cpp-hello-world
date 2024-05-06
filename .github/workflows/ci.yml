@@ -71,6 +71,11 @@ jobs:
           $vcpkgRoot = (Resolve-Path .\vcpkg\installed\x64-windows\lib\cmake\Qt5).Path
           echo $vcpkgRoot
 
+      # Install necessary packages via vcpkg
+      - name: Install vcpkg packages
+        run: |
+          .\vcpkg\vcpkg install qt5-base:x64-windows
+     
       # Install Qt Base via vcpkg
       - name: Install Qt Base via vcpkg
         run: |
@@ -88,8 +93,8 @@ jobs:
       # Generate build files using CMake and the vcpkg toolchain file
       - name: Generate Build Files
         run: |
-          $Qt5Dir = Resolve-Path ".\vcpkg\installed\x64-windows\share\qt5"
-          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake -DQt5_DIR=$Qt5Dir
+          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake"
+          cmake --build build --config Release
       
           
       # Build the project using CMake
