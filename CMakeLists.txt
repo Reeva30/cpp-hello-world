@@ -1,4 +1,3 @@
-# Example CMakeLists.txt for a Qt application
 cmake_minimum_required(VERSION 3.10)
 project(HelloWorld)
 
@@ -9,11 +8,11 @@ endif()
 
 set(CMAKE_CXX_STANDARD 11)
 
-# Find the required Qt packages
-find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+# Find the Qt5 package
+find_package(Qt5 COMPONENTS REQUIRED Core)
 
 # Create the executable
 add_executable(main main.cpp)
 
-# Link against the necessary Qt libraries
-target_link_libraries(main Qt5::Core Qt5::Gui Qt5::Widgets)
+# Link the Qt5 libraries to the executable
+target_link_libraries(main PRIVATE Qt5::Core)
