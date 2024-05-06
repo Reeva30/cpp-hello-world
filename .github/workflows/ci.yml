@@ -63,30 +63,26 @@ jobs:
         run: |
           .\vcpkg\vcpkg install qt5-base:x64-windows --binarycaching
 
-      # Download and Install the Qt Visual Studio Tools Extension
-      - name: Install Qt Visual Studio Tools Extension
+
+      - name: Download and Install the Qt Visual Studio Tools Extension
         shell: powershell
         run: |
-          $vsixUrl = "https://raw.githubusercontent.com/Reeva30/cpp-hello-world/dev/qt-vsaddin-msvc2022-x64-3.2.0-rev.43.vsix"
-          $vsixFile = "QtVsTools.vsix"
+          $repoOwner = "Reeva30"
+          $repoName = "cpp-hello-world"
+          $tag = "latest" # or use a specific release tag
+          $fileName = "qt-vsaddin-msvc2022-x64-3.2.0-rev.43.vsix"
+    
+          $apiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/$tag"
+          $release = Invoke-RestMethod -Uri $apiUrl -Headers @{Accept = "application/vnd.github.v3+json"}
+          $asset = $release.assets | Where-Object { $_.name -eq $fileName }
+          if ($asset -eq $null) {
+            throw "Release asset $fileName not found"
+          }
+    
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "QtVsTools.vsix"
           $vsixInstallerPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\VSIXInstaller.exe"
-
-          # Download the VSIX file
-          try {
-              Invoke-WebRequest -Uri $vsixUrl -OutFile $vsixFile -ErrorAction Stop
-          } catch {
-              Write-Error "Failed to download the Qt Visual Studio Tools extension."
-              throw
-          }
-
-          # Verify the existence of VSIXInstaller.exe
-          if (-Not (Test-Path $vsixInstallerPath)) {
-              Write-Error "VSIXInstaller.exe not found at the expected path."
-              throw
-          }
-
-          # Run the installer to add the extension to Visual Studio
-          Start-Process -FilePath $vsixInstallerPath -ArgumentList '/quiet', $vsixFile -Wait
+          Start-Process -FilePath $vsixInstallerPath -ArgumentList '/quiet', 'QtVsTools.vsix' -Wait
+        
 
       # Set up the Visual Studio Build Environment
       - name: Set up Visual Studio Build Environment
