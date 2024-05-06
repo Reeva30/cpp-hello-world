@@ -80,8 +80,8 @@ jobs:
       # Generate build files using CMake and the vcpkg toolchain file
       - name: Generate Build Files
         run: |
-          $vcpkgRoot = (Resolve-Path .\vcpkg\installed\x64-windows\lib\cmake\Qt5).Path
-          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_PREFIX_PATH=$vcpkgRoot
+          $Qt5Dir = Resolve-Path ".\vcpkg\installed\x64-windows\share\qt5"
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake -DQt5_DIR=$Qt5Dir
 
           
       # Build the project using CMake
