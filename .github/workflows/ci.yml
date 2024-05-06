@@ -59,6 +59,8 @@ jobs:
           cmake -B . -S .
           cmake --build . --config Release  # Compile in Release mode
 
+      # Run the resulting executable
       - name: Run the executable
         run: |
-          .\build\main.exe
+          Join-Path -Path $PWD -ChildPath "build\main.exe"
+
