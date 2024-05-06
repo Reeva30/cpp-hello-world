@@ -53,6 +53,12 @@ jobs:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
+     # Add QT Visual Studio Tools using Visual Studio Installer (command-line arguments)
+      - name: Add QT Visual Studio Tools
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
+
       # Generate build files using CMake
       - name: Generate Build Files
         run: |
