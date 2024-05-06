@@ -65,11 +65,7 @@ jobs:
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           .\vcpkg\bootstrap-vcpkg.bat
-          
-      - name: Debug Qt5 path
-        run: |
-          $vcpkgRoot = (Resolve-Path .\vcpkg\installed\x64-windows\lib\cmake\Qt5).Path
-          echo $vcpkgRoot
+
 
       # Generate build files using CMake and the vcpkg toolchain file
       - name: Generate Build Files
