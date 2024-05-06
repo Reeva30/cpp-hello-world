@@ -31,6 +31,7 @@ jobs:
 
       - name: Verify Rust Installation
         run: |
+          cmake -B build -S . -DCMAKE_PREFIX_PATH="path/to/qt5/installation"
           rustc --version
 
       # Cache CMake for subsequent builds
