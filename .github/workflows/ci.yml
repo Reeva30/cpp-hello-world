@@ -21,11 +21,7 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop"
         shell: powershell
 
-      # Install Qt via Chocolatey
-      - name: Install Qt via Chocolatey
-        run: |
-          choco install qt5 -y
-        shell: powershell
+     
 
       # Install Rust 1.76 using Rustup
       - name: Install Rust 1.76
