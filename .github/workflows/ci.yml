@@ -2,9 +2,9 @@ name: Simplified C++ Build and Test
 
 on:
   push:
-    branches: [inv]
+    branches: [dev]
   pull_request:
-    branches: [inv]
+    branches: [dev]
 
 jobs:
   build:
