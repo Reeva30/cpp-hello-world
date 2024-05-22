@@ -57,7 +57,13 @@ jobs:
       - name: Add QT Visual Studio Tools
         shell: cmd
         run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools  --version 5.15.2 --quiet
+
+      # Verify Qt Installation
+      - name: Verify Qt Installation
+        run: |
+          Get-Content "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*.*.*\include\QtCore\qglobal.h" | Select-String "#define QT_VERSION_STR"
+        shell: powershell
 
       # Generate build files using CMake
       - name: Generate Build Files
