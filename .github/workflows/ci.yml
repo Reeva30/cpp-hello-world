@@ -20,8 +20,9 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop"
           if ($LASTEXITCODE -eq 3010) {
             Write-Host "Installation requires a reboot. Proceeding without reboot."
-            $env:ChocolateyExitCode = '0'  # Override the exit code
+            $LASTEXITCODE = 0  # Manually reset the last exit code
           }
+          exit $LASTEXITCODE  # Exit with the adjusted last exit code
         shell: powershell
 
       # Cache CMake for subsequent builds
