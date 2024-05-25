@@ -7,8 +7,8 @@ on:
     branches: [dev]
 
 jobs:
-  build:
-    name: Build C++ Code
+  setup-environment:
+    name: Setup Environment
     runs-on: windows-latest
 
     steps:
@@ -21,18 +21,6 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop"
         shell: powershell
 
-      # Install Rust (v1.76.0)
-      - name: Install Rust (v1.76.0)
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: '1.76.0'
-          override: true
-
-      # Verify Rust Installation
-      - name: Verify Rust Installation
-        run: |
-          rustc --version
-
       # Cache CMake for subsequent builds
       - name: Cache CMake
         uses: actions/cache@v3
@@ -42,22 +30,30 @@ jobs:
 
       # Install CMake using Chocolatey if not cached
       - name: Install CMake
-        if: steps.CacheCMake.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
         shell: powershell
-      
+
+      # Persist installation for next jobs
+      - name: Save Installation State
+        run: |
+          echo "INSTALLED_VS=true" >> $GITHUB_ENV
+
+  build:
+    name: Build C++ Code
+    runs-on: windows-latest
+    needs: setup-environment
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       # Set up the Visual Studio Build Environment
       - name: Set up Visual Studio Build Environment
         shell: cmd
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-
-     # Add QT Visual Studio Tools using Visual Studio Installer (command-line arguments)
-      - name: Add QT Visual Studio Tools
-        shell: cmd
-        run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quite
 
       # Generate build files using CMake
       - name: Generate Build Files
@@ -65,8 +61,28 @@ jobs:
           cmake -B . -S .
           cmake --build . --config Release  # Compile in Release mode
 
+  test:
+    name: Test Executable
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       # Run the resulting executable
       - name: Run the executable
         run: |
           Join-Path -Path $PWD -ChildPath "build\main.exe"
 
+      # Verify Rust Installation
+      - name: Verify Rust Installation
+        run: |
+          rustc --version
+
+      # Install Rust (v1.76.0)
+      - name: Install Rust (v1.76.0)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: '1.76.0'
+          override: true
