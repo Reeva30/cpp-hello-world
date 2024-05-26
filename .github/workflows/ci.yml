@@ -10,8 +10,9 @@ jobs:
       - name: Checkout main repository
         uses: actions/checkout@v2
         with:
-          repository: 'your-username/your-repo'
+          repository: 'Reeva30/cpp-hello-world'
           token: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub
+          ref: 'Demo' 
 
       - name: Checkout OpenTwin repository
         uses: actions/checkout@v2
