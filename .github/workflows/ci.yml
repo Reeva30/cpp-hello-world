@@ -21,8 +21,8 @@ jobs:
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop"
           if ($LASTEXITCODE -eq 3010) {
-            Write-Host "Installation requires a reboot. Proceeding without reboot."
-            $env:ChocolateyExitCode = '0'  # Override the exit code
+            Write-Host "Installation requires a reboot. You need to manually restart the runner or handle the reboot requirement in your workflow."
+            exit 1  # Exit to indicate failure that needs manual intervention
           }
         shell: powershell
 
