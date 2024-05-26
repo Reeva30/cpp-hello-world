@@ -38,20 +38,6 @@ jobs:
       - name: Verify Rust Installation
         run: |
           rustc --version
-
-      # Cache CMake for subsequent builds
-      - name: Cache CMake
-        uses: actions/cache@v3
-        with:
-          path: C:\Program Files\CMake
-          key: cmake-${{ runner.os }}
-
-      # Install CMake using Chocolatey if not cached
-      - name: Install CMake
-        if: steps.cache-cmake.outputs.cache-hit != 'true'
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-        shell: powershell
       
       # Set up the Visual Studio Build Environment
       - name: Set up Visual Studio Build Environment
@@ -64,11 +50,11 @@ jobs:
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
 
-      # Generate build files using CMake
-      - name: Generate Build Files
+      # Build project using MSBuild
+      - name: Build Project
+        shell: cmd
         run: |
-          cmake -B . -S .
-          cmake --build . --config Release  # Compile in Release mode
+          MSBuild YourSolution.sln /p:Configuration=Release /p:Platform="x64"
 
       # Run the resulting executable
       - name: Run the executable
