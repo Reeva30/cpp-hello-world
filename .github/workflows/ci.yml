@@ -15,11 +15,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Install Visual Studio 2022 Build Tools using Chocolatey 
+      # Install Visual Studio 2022 Build Tools using Chocolatey
       - name: Install Visual Studio 2022 Build Tools
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop"
+          if ($LASTEXITCODE -eq 3010) {
+            # Ignore the reboot required error code and continue
+            Write-Host "Reboot requested by the installer. Ignoring and continuing."
+            $LASTEXITCODE = 0
+          }
         shell: powershell
+        continue-on-error: true
 
       # Install Rust (v1.76.0)
       - name: Install Rust (v1.76.0)
@@ -42,7 +48,7 @@ jobs:
 
       # Install CMake using Chocolatey if not cached
       - name: Install CMake
-        if: steps.CacheCMake.outputs.cache-hit != 'true'
+        if: steps.cache-cmake.outputs.cache-hit != 'true'
         run: |
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
         shell: powershell
@@ -53,16 +59,11 @@ jobs:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
-     # Add QT Visual Studio Tools using Visual Studio Installer (command-line arguments)
+      # Add QT Visual Studio Tools using Visual Studio Installer (command-line arguments)
       - name: Add QT Visual Studio Tools
         shell: cmd
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --version 6.6.1 --quiet
-
-     # Set Qt Version
-      - name: Set Qt Version
-        run: |
-          echo "Qt version 6.6.1 at path: https://github.com/OT-OpenTwin/ThirdParty/tree/main/Qt/6.6.1/msvc2019_64"
 
       # Generate build files using CMake
       - name: Generate Build Files
@@ -74,4 +75,3 @@ jobs:
       - name: Run the executable
         run: |
           Join-Path -Path $PWD -ChildPath "build\main.exe"
-
