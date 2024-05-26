@@ -15,12 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Checkout Qt
-        uses: actions/checkout@v3
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'
-          ref: 'main'
 
       # Install Visual Studio 2022 Build Tools using Chocolatey 
       - name: Install Visual Studio 2022 Build Tools
@@ -33,6 +27,13 @@ jobs:
         shell: powershell
 
 
+      - name: Checkout Qt
+        uses: actions/checkout@v3
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'
+          ref: 'main'
+          
       # Install Qt Visual Studio Tools extension
       - name: Install Qt Visual Studio Tools
         run: |
