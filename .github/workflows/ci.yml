@@ -44,12 +44,16 @@ jobs:
         run: |
           rustc --version
       
-      # Set up the Visual Studio Build Environment
+            # Set up the Visual Studio Build Environment
       - name: Set up Visual Studio Build Environment
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" > setup.log
+          type setup.log
+          cl /EHsc /Fe:hello.exe main.cpp
+        env:
+          PATH: ${{ env.PATH }};C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.40.33807\bin\Hostx64\x64
+          
       - name: Add QT Visual Studio Tools
         shell: cmd
         run: |
