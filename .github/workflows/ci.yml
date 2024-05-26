@@ -32,7 +32,7 @@ jobs:
             $LASTEXITCODE = 0
           }
         shell: powershell
-        continue-on-error: true
+      #  continue-on-error: true
 
 
       # Install Qt Visual Studio Tools extension
