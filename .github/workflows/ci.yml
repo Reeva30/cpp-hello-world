@@ -2,9 +2,9 @@ name: Simplified C++ Build and Test
 
 on:
   push:
-    branches: [dev]
+    branches: [try]
   pull_request:
-    branches: [dev]
+    branches: [try]
 
 jobs:
   build:
@@ -22,12 +22,6 @@ jobs:
           repository: 'OT-OpenTwin/ThirdParty'
           path: 'ThirdParty'
           ref: 'main'
-
-      # Setup Qt environment variables
-      - name: Setup Qt Environment
-        run: |
-          echo "QTDIR=${{ github.workspace }}/ThirdParty/Qt/6.6.1/msvc2019_64" >> $GITHUB_ENV
-          echo "PATH=${{ github.workspace }}/ThirdParty/Qt/6.6.1/msvc2019_64/bin;${PATH}" >> $GITHUB_ENV
 
       # Install Visual Studio 2022 Build Tools using Chocolatey 
       - name: Install Visual Studio 2022 Build Tools
