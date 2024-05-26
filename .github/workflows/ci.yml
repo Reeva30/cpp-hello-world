@@ -25,7 +25,7 @@ jobs:
             $LASTEXITCODE = 0
           }
         shell: powershell
-        continue-on-error: true
+      #  continue-on-error: true
 
       # Install Rust (v1.76.0)
       - name: Install Rust (v1.76.0)
@@ -50,12 +50,12 @@ jobs:
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
 
-      # Build project using MSBuild
       - name: Build Project
         shell: cmd
         run: |
-          MSBuild YourSolution.sln /p:Configuration=Release /p:Platform="x64"
-
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" YourSolution.sln /p:Configuration=Release /p:Platform="x64"
+ 
       # Run the resulting executable
       - name: Run the executable
         run: |
