@@ -50,13 +50,13 @@ jobs:
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
 
-      - name: Build Project
+       # Compile the C++ file directly using cl.exe
+      - name: Compile C++ file
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" YourSolution.sln /p:Configuration=Release /p:Platform="x64"
- 
+          cl /EHsc /Fe:hello.exe main.cpp
+
       # Run the resulting executable
       - name: Run the executable
         run: |
-          Join-Path -Path $PWD -ChildPath "build\main.exe"
+          .\hello.exe
