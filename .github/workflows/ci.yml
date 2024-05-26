@@ -22,17 +22,15 @@ jobs:
           path: 'ThirdParty'
           ref: 'main'
 
-      # Install Visual Studio 2022 Build Tools using Chocolatey
+      # Install Visual Studio 2022 Build Tools using Chocolatey 
       - name: Install Visual Studio 2022 Build Tools
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop"
           if ($LASTEXITCODE -eq 3010) {
-            # Ignore the reboot required error code and continue
-            Write-Host "Reboot requested by the installer. Ignoring and continuing."
-            $LASTEXITCODE = 0
+            Write-Host "Installation requires a reboot. Proceeding without reboot."
+            $env:ChocolateyExitCode = '0'  # Override the exit code
           }
         shell: powershell
-      #  continue-on-error: true
 
 
       # Install Qt Visual Studio Tools extension
