@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Checkout Qt from the repository
       - name: Checkout Qt
@@ -32,6 +32,7 @@ jobs:
             $env:ChocolateyExitCode = '0'  # Override the exit code
           }
         shell: powershell
+        continue-on-error: false
 
       # Install Rust (v1.76.0)
       - name: Install Rust (v1.76.0)
@@ -68,10 +69,11 @@ jobs:
       # Generate build files using CMake
       - name: Generate Build Files
         run: |
-          cmake -B . -S .
-          cmake --build . --config Release  # Compile in Release mode
+          cmake -B build -S .
+          cmake --build build --config Release
 
       # Run the resulting executable
       - name: Run the executable
         run: |
-          Join-Path -Path $PWD -ChildPath "build\main.exe"
+          & "$PWD/build/Release/main.exe"
+        shell: powershell
