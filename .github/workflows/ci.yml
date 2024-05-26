@@ -55,11 +55,13 @@ jobs:
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
 
-       # Compile the C++ file directly using cl.exe
+      # Compile the C++ file directly using cl.exe
       - name: Compile C++ file
         shell: cmd
         run: |
           cl /EHsc /Fe:hello.exe main.cpp
+        env:
+          PATH: ${{ env.PATH }};C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.40.33807\bin\Hostx64\x64
 
       # Run the resulting executable
       - name: Run the executable
