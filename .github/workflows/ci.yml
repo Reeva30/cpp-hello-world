@@ -69,6 +69,11 @@ jobs:
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --add Microsoft.VisualStudio.Component.QT.6.6.1.VisualStudioTools --quiet
 
+      # Verify Qt Installation
+      - name: Verify Qt Installation
+        run: |
+          qmake -v 
+
       # Generate build files using CMake 
       - name: Generate Build Files
         run: |
