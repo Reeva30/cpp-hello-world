@@ -74,8 +74,9 @@ jobs:
       - name: Find Qt Installation Directory
         id: find-qt-path
         run: |
-          $qtPath = Get-ChildItem -Path "C:\Program Files (x86)\Microsoft Visual Studio\*" -Filter "qt*" -Recurse | Where-Object { $_.PSIsContainer } | Select-Object -First 1 -ExpandProperty FullName
+          $qtPath = Get-ChildItem -Path "C:\" -Filter "qt*" -Recurse | Where-Object { $_.PSIsContainer } | Select-Object -First 1 -ExpandProperty FullName
           echo "Qt Installation Directory: $qtPath"
+
 
       # Add Qt bin directory to PATH
       - name: Add Qt bin directory to PATH
