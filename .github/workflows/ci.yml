@@ -31,10 +31,9 @@ jobs:
           path: 'ThirdParty'
           ref: 'main'
           
-      # Install Qt Visual Studio Tools extension
       - name: Install Qt Visual Studio Tools
         run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\VSIXInstaller.exe" /q /a "https://github.com/OT-OpenTwin/ThirdParty/raw/main/QtVisualStudioTools.vsix"
+          & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\VSIXInstaller.exe" /q /a "https://github.com/OT-OpenTwin/ThirdParty/raw/main/QtVisualStudioTools.vsix"
         shell: powershell
 
       # Configure Qt in Visual Studio
