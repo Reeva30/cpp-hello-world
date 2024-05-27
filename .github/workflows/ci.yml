@@ -19,13 +19,10 @@ jobs:
       - name: Install Visual Studio 2022 Build Tools
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
-          if ($LASTEXITCODE -eq 3010) {
-            # Ignore the reboot required error code and continue
-            Write-Host "Reboot requested by the installer. Ignoring and continuing."
-            $LASTEXITCODE = 0
-          }
+          # Handle reboot error if necessary
         shell: powershell
-        continue-on-error: true
+    #  continue-on-error: true
+
 
         
       - name: List MSVC versions
