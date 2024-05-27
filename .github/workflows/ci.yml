@@ -64,15 +64,30 @@ jobs:
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
           
+    # Add QT Visual Studio Tools
       - name: Add QT Visual Studio Tools
         shell: cmd
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --add Microsoft.VisualStudio.Component.QT.6.6.1.VisualStudioTools --quiet
 
+      # Find Qt Installation Directory
+      - name: Find Qt Installation Directory
+        id: find-qt-path
+        run: |
+          $qtPath = Get-ChildItem -Path "C:\Program Files (x86)\Microsoft Visual Studio\*" -Filter "qt*" -Recurse | Where-Object { $_.PSIsContainer } | Select-Object -First 1 -ExpandProperty FullName
+          echo "Qt Installation Directory: $qtPath"
+
+      # Add Qt to PATH
+      - name: Add Qt to PATH
+        shell: powershell
+        run: |
+          $env:Path += ";$($qtPath)\bin"
+
       # Verify Qt Installation
       - name: Verify Qt Installation
         run: |
-          qmake -v 
+          qmake -v  # or any other command to verify the Qt installation
+
 
       # Generate build files using CMake 
       - name: Generate Build Files
