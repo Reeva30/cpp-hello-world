@@ -20,9 +20,18 @@ jobs:
           repository: 'OT-OpenTwin/OpenTwin'
           path: 'OpenTwin'  # Directory to clone the repository into
 
-      # You can add more repositories as needed
+      - name: Checkout ThirdParty repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'  # Directory to clone the repository into
 
       - name: Use files from OpenTwin
         run: |
           dir OpenTwin  # Using Windows command 'dir' instead of 'ls'
           # You can now use files from the OpenTwin repository in your workflow
+
+      - name: Use files from ThirdParty
+        run: |
+          dir ThirdParty  # Using Windows command to list files
+          # You can now use files from the ThirdParty repository in your workflow
