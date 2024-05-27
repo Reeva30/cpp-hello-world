@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            build/main.exe   # Example path to your build artifact
+            D:\a\cpp-hello-world\cpp-hello-world\build\main.exe   # Example path to your build artifact
           key: ${{ runner.os }}-build-${{ hashFiles('build/main.exe') }}
 
       # Install CMake using Chocolatey if not cached
