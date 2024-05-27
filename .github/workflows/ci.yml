@@ -30,6 +30,14 @@ jobs:
           path: C:\Program Files\CMake
           key: cmake-${{ runner.os }}
 
+    # Cache build artifacts
+      - name: Cache Build Artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/main.exe   # Example path to your build artifact
+          key: ${{ runner.os }}-build-${{ hashFiles('build/main.exe') }}
+
       # Install CMake using Chocolatey if not cached
       - name: Install CMake
         if: steps.CacheCMake.outputs.cache-hit != 'true'
@@ -37,11 +45,6 @@ jobs:
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
         shell: powershell
       
-
-        
-      - name: List MSVC versions
-        run: dir "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC"
-        shell: cmd
 
       # Install Rust (v1.76.0)
       - name: Install Rust (v1.76.0)
