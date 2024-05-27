@@ -21,8 +21,22 @@ jobs:
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
           # Handle reboot error if necessary
         shell: powershell
-    #  continue-on-error: true
+        continue-on-error: true
+    
+    # Cache CMake for subsequent builds
+      - name: Cache CMake
+        uses: actions/cache@v3
+        with:
+          path: C:\Program Files\CMake
+          key: cmake-${{ runner.os }}
 
+      # Install CMake using Chocolatey if not cached
+      - name: Install CMake
+        if: steps.CacheCMake.outputs.cache-hit != 'true'
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        shell: powershell
+      
 
         
       - name: List MSVC versions
@@ -42,34 +56,27 @@ jobs:
           rustc --version
       
             # Set up the Visual Studio Build Environment
+
+      # Set up the Visual Studio Build Environment
       - name: Set up Visual Studio Build Environment
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" > setup.log
-          type setup.log
-          cl /EHsc /Fe:hello.exe main.cpp
-        env:
-          PATH: ${{ env.PATH }};C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.40.33807\bin\Hostx64\x64
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+
           
       - name: Add QT Visual Studio Tools
         shell: cmd
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.QT.VisualStudioTools --quiet
 
-      - name: List C++ Includes
-        shell: cmd
+      # Generate build files using CMake 
+      - name: Generate Build Files
         run: |
-          dir "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.40.33807\include"
-
-          
-
-      - name: Compile C++ file
-        shell: cmd
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-          cl /EHsc /Fe:hello.exe main.cpp
+          cmake -B . -S .
+          cmake --build . --config Release  # Compile in Release mode
 
       # Run the resulting executable
       - name: Run the executable
         run: |
-          .\hello.exe
+          Join-Path -Path $PWD -ChildPath "build\main.exe"
+
