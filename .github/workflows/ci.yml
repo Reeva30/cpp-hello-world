@@ -4,14 +4,14 @@ on: [push, pull_request]
 
 jobs:
   checkout-repos:
-    runs-on: windows-latest  # Changed from ubuntu-latest to windows-latest
+    runs-on: windows-latest  
 
     steps:
       - name: Checkout main repository
         uses: actions/checkout@v2
         with:
           repository: 'Reeva30/cpp-hello-world'
-          token: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub
+          token: ${{ secrets.GITHUB_TOKEN }}  
           ref: 'Demo' 
 
       - name: Checkout OpenTwin repository
