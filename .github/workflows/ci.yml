@@ -23,21 +23,21 @@ jobs:
         shell: powershell
         continue-on-error: true
     
-    # Cache CMake for subsequent builds
+       # Cache CMake for subsequent builds
       - name: Cache CMake
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: C:\Program Files\CMake
           key: cmake-${{ runner.os }}
 
-    # Cache build artifacts
+      # Cache build artifacts
       - name: Cache Build Artifacts
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
-          path: |
-            D:\a\cpp-hello-world\cpp-hello-world\build\main.exe   # Example path to your build artifact
+          path: build
           key: ${{ runner.os }}-build-${{ hashFiles('build/main.exe') }}
 
+          
       # Install CMake using Chocolatey if not cached
       - name: Install CMake
         if: steps.CacheCMake.outputs.cache-hit != 'true'
