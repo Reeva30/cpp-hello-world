@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Test C++ Project
 
 on:
   push:
@@ -6,27 +6,65 @@ on:
       - Docker_Implementation  # Adjust the branch as needed
 
 jobs:
-  build-and-push:
+  build:
     runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker
+      - name: Set up Chocolatey
         run: |
-          choco install docker-cli
-          Start-Service docker
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      - name: Build Docker image
+      - name: Install Visual Studio 2019 Build Tools
         run: |
-          docker build -t reeva30/try:latest .
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+
+      - name: Install CMake
+        run: |
+          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+      - name: Install Qt
+        run: |
+          choco install -y qt6 --package-parameters "--add Microsoft.VisualStudio.Component.QT.VisualStudioTools --add Microsoft.VisualStudio.Component.QT.6.6.1.VisualStudioTools"
+
+      - name: Install Rust
+        run: |
+          choco install -y rust
+
+      - name: Install Git
+        run: |
+          choco install -y git
+
+      - name: Set up Visual Studio Build Environment
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+
+      - name: Generate Build Files with CMake
+        run: |
+          cmake -B build -S .
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
+      - name: Run Tests
+        run: |
+          build\Release\your_test_executable.exe  # Adjust this path as necessary
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t reeva30/try:latest .
 
       - name: Push Docker image to Docker Hub
         run: |
