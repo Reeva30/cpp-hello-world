@@ -36,14 +36,23 @@ jobs:
       - name: Install Rust
         run: |
           choco install -y rust --version=1.76.0
-          
+
+      - name: Install Git
+        run: |
+          choco install -y git
+
+      - name: Install aqtinstall
+        run: |
+          pip install aqtinstall
+
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version:      ${{ env.QT_VERSION }}
-          host:         windows
-          target:       desktop
-          arch:         win64_msvc2022_64  
+        run: |
+          python -m aqt install-qt windows desktop win64_msvc2022_64 --outputdir X:/OpenTwin/Repo/Third_Party_Libraries/Qt/6.6.1/msvc2019_64
+
+      - name: Set Qt environment variable
+        run: |
+          echo "QT_DIR=X:/OpenTwin/Repo/Third_Party_Libraries/Qt/6.6.1/msvc2019_64" >> $GITHUB_ENV
+
 
   build-and-test:
     runs-on: windows-latest
