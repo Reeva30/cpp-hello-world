@@ -37,22 +37,41 @@ jobs:
         run: |
           choco install -y rust --version=1.76.0
 
-      - name: Install Git
-        run: |
-          choco install -y git
-
-      - name: Install aqtinstall
-        run: |
-          pip install aqtinstall
-
       - name: Install Qt
-        run: |
-          python -m aqt install-qt windows desktop win64_msvc2022_64 --outputdir X:/OpenTwin/Repo/Third_Party_Libraries/Qt/6.6.1/msvc2019_64
+        uses: jurplel/install-qt-action@v3
+        with:
+          version:      ${{ env.QT_VERSION }}
+          host:         windows
+          target:       desktop
+          arch:         win64_msvc2019_64
+          dir:          ${{ runner.temp }}
+          setup-python: false
 
-      - name: Set Qt environment variable
+      - name: Print Qt version information
         run: |
-          echo "QT_DIR=X:/OpenTwin/Repo/Third_Party_Libraries/Qt/6.6.1/msvc2019_64" >> $GITHUB_ENV
+          qmake -v
 
+      - name: Install Vcpkg and cURL 
+        working-directory: ${{ runner.temp }}
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          .\vcpkg install curl
+          curl --version
+
+      - name: Set Qt Environment Variables and path
+        run: |
+          echo "QTDIR=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64" >> $GITHUB_ENV
+          echo "QtToolsPath=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" >> $GITHUB_ENV
+          echo "INCLUDE_PATH_1=${{ github.workspace }}/${{ env.PROJ_NAME }}/src/header" >> $GITHUB_PATH
+          echo "INCLUDE_PATH_2=${{ github.workspace }}/${{ env.PROJ_NAME }}/src/parser" >> $GITHUB_PATH
+          echo "INCLUDE_PATH_3=${{ github.workspace }}/${{ env.PROJ_NAME }}/src/cc" >> $GITHUB_PATH
+          echo "INCLUDE_PATH_VCPKG=${{ runner.temp }}/vcpkg/installed/x64-windows/include" >> $GITHUB_PATH
+          ls ${INCLUDE_PATH_1}
+          ls ${INCLUDE_PATH_2}
+          ls ${INCLUDE_PATH_3}
+        shell: bash
 
   build-and-test:
     runs-on: windows-latest
