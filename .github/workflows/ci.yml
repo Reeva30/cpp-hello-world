@@ -36,15 +36,14 @@ jobs:
       - name: Install Rust
         run: |
           choco install -y rust --version=1.76.0
-
+          
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.5.2'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2022_64'  # Adjust to match Visual Studio 2022 if necessary
-          modules: 'qtbase,qttools'  # Specify the required Qt modules
+          version:      ${{ env.QT_VERSION }}
+          host:         windows
+          target:       desktop
+          arch:         win64_msvc2022_64  
 
   build-and-test:
     runs-on: windows-latest
