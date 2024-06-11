@@ -1,33 +1,32 @@
-name: Build and Push Docker Image
+name: Build and Test C++ Project with Docker
 
 on:
   push:
     branches:
-      - Docker_Implementation  # Adjust the branch as needed
+      - main  # Adjust the branch as needed
 
 jobs:
-  build-and-push:
+  build-and-test:
     runs-on: windows-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up Docker
-        run: |
-          choco install docker-cli
-          Start-Service docker
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build Docker image
         run: |
           docker build -t reeva30/try:latest .
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-
       - name: Push Docker image to Docker Hub
         run: |
           docker push reeva30/try:latest
+
+      - name: Run Docker container for testing
+        run: |
+          docker run --rm reeva30/try:latest build\Release\your_test_executable.exe
