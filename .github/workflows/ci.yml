@@ -19,7 +19,6 @@ jobs:
           repository: 'OT-OpenTwin/OpenTwin'
           path: 'OpenTwin'  # Directory to clone the repository into
 
-
       - name: Set up Chocolatey
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
