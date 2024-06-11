@@ -19,11 +19,6 @@ jobs:
           repository: 'OT-OpenTwin/OpenTwin'
           path: 'OpenTwin'  # Directory to clone the repository into
 
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
 
       - name: Set up Chocolatey
         run: |
@@ -66,11 +61,7 @@ jobs:
           repository: 'OT-OpenTwin/OpenTwin'
           path: 'OpenTwin'  # Directory to clone the repository into
 
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
+
 
       - name: Cache CMake build
         uses: actions/cache@v3
