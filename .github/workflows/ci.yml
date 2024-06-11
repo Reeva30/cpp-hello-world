@@ -82,6 +82,11 @@ jobs:
         run: |
           cmake --build build --config Release
 
+      - name: Check Build Artifact Size
+        run: |
+          du -sh build
+
+
       - name: Save build artifacts
         uses: actions/upload-artifact@v3
         with:
