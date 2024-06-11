@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Chocolatey
         run: |
@@ -27,11 +27,6 @@ jobs:
         run: |
           choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '6.5.2'
-
       - name: Install Rust
         run: |
           choco install -y rust
@@ -40,18 +35,23 @@ jobs:
         run: |
           choco install -y git
 
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.2'
+
   build-and-test:
     runs-on: windows-latest
     needs: setup-environment
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Visual Studio Build Environment
-        shell: cmd
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Generate Build Files with CMake
         run: |
@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
