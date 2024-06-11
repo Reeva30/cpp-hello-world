@@ -10,20 +10,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Checkout OpenTwin repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/OpenTwin'
-          path: 'OpenTwin'  # Directory to clone the repository into
-
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v3
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
+      - name: Checkout all code repositories
+        run: |
+          git clone https://github.com/Reeva30/cpp-hello-world.git .
+          git clone https://github.com/OT-OpenTwin/OpenTwin.git OpenTwin
+          git clone https://github.com/OT-OpenTwin/ThirdParty.git ThirdParty
 
       - name: Set up Chocolatey
         run: |
@@ -48,26 +39,21 @@ jobs:
         with:
           version: '6.5.2'
 
+      - name: Upload environment setup
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-setup
+          path: .  # Adjust the path to only include necessary files if needed
+
   build-and-test:
     runs-on: windows-latest
     needs: setup-environment
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Checkout OpenTwin repository
-        uses: actions/checkout@v2
+      - name: Download environment setup
+        uses: actions/download-artifact@v3
         with:
-          repository: 'OT-OpenTwin/OpenTwin'
-          path: 'OpenTwin'  # Directory to clone the repository into
-
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
-
+          name: env-setup
 
       - name: Cache CMake build
         uses: actions/cache@v3
@@ -100,6 +86,7 @@ jobs:
         with:
           name: build-artifacts
           path: build
+
       - name: Configure AWS credentials
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -115,23 +102,13 @@ jobs:
     needs: build-and-test
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Checkout OpenTwin repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/OpenTwin'
-          path: 'OpenTwin'  # Directory to clone the repository into
-
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
-
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
           name: build-artifacts
           path: build
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
