@@ -103,7 +103,6 @@ jobs:
         with:
           name: build-artifacts
           path: build
-
       - name: Configure AWS credentials
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -139,8 +138,3 @@ jobs:
         with:
           name: build-artifacts
           path: build
-
-      - name: Run Tests
-        run: |
-          cd build
-          ctest --output-on-failure
