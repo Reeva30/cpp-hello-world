@@ -1,12 +1,17 @@
-name: Multi-Repository Checkout
+name: Build and Test C++ Project
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - Demo  # Adjust the branch as needed
 
 jobs:
-  checkout-repos:
-    runs-on: windows-latest  
+  setup-environment:
+    runs-on: windows-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Checkout OpenTwin repository
         uses: actions/checkout@v2
@@ -20,12 +25,84 @@ jobs:
           repository: 'OT-OpenTwin/ThirdParty'
           path: 'ThirdParty'  # Directory to clone the repository into
 
-      - name: Use files from OpenTwin
+      - name: Set up Chocolatey
         run: |
-          dir OpenTwin  # Using Windows command 'dir' instead of 'ls'
-          # You can now use files from the OpenTwin repository in your workflow
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      - name: Use files from ThirdParty
+      - name: Install Visual Studio 2019 Build Tools
         run: |
-          dir ThirdParty  # Using Windows command to list files
-          # You can now use files from the ThirdParty repository in your workflow
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+
+      - name: Install CMake
+        run: |
+          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+      - name: Install Rust
+        run: |
+          choco install -y rust
+
+      - name: Install Git
+        run: |
+          choco install -y git
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.2'
+
+  build-and-test:
+    runs-on: windows-latest
+    needs: setup-environment
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cache CMake build
+        uses: actions/cache@v3
+        with:
+          path: |
+            build
+          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-build-
+
+      - name: Set up Visual Studio Build Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Generate Build Files with CMake
+        run: |
+          cmake -B build -S .
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
+      - name: Save build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: build
+
+  test:
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: build
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure
