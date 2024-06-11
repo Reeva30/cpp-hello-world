@@ -1,39 +1,125 @@
-name: C++ CI
+name: Build and Test C++ Project
 
 on:
   push:
-    branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
+    branches:
+      - test  # Adjust the branch as needed
 
 jobs:
-  build:
+  setup-environment:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Install dependencies
-      run: brew install gcc
-    - name: Set up MSBuild path
-      uses: microsoft/setup-msbuild@v1.1
-    - name: Install Visual Studio
-      uses: egor-tensin/setup-msvc@v1
-      with:
-        version: vs2022
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: 1.76.0
-        default: true
-        profile: minimal
-        override: true    
+      - name: Checkout OpenTwin repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/OpenTwin'
+          path: 'OpenTwin'  # Directory to clone the repository into
 
-    - name: Build with MSBuild
-      run: msbuild MyProject.sln /p:Configuration=Release /p:Platform="x64"
-      
-    - name: Build project
-      run: g++ -o hello_world main.cpp
-    - name: Run tests
-      run: ./hello_world
+      - name: Checkout ThirdParty repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'  # Directory to clone the repository into
 
+      - name: Set up Chocolatey
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install Visual Studio 2022 Build Tools
+        run: |
+          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+
+      - name: Install CMake
+        run: |
+          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+      - name: Install Rust
+        run: |
+          choco install -y rust --version=1.76.0
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.2'
+
+      - name: Upload environment as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: environment
+          path: .
+
+  build-and-test:
+    runs-on: windows-latest
+    needs: setup-environment
+
+    steps:
+      - name: Download environment artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: environment
+          path: .
+
+      - name: Cache CMake build
+        uses: actions/cache@v3
+        with:
+          path: |
+            build
+          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-build-
+
+      - name: Set up Visual Studio Build Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Generate Build Files with CMake
+        run: |
+          cmake -B build -S .
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
+      - name: Check Build Artifact Size
+        run: |
+          du -sh build
+
+      - name: Save build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: build
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
+
+      - name: Upload build artifacts to S3
+        run: |
+          aws s3 cp build s3://my-github-artifacts-bucket/build --recursive
+
+  test:
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+      - name: Download environment artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: environment
+          path: .
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: build
