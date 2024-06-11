@@ -1,4 +1,4 @@
-name: Build and Test C++ Project with Docker
+name: Build and Test C++ Project
 
 on:
   push:
@@ -6,31 +6,146 @@ on:
       - Docker_Implementation  # Adjust the branch as needed
 
 jobs:
-  build-and-test:
+  setup-environment:
     runs-on: windows-latest
 
-    env:
-      DOCKER_HUB_USERNAME: reeva30  # Replace with your Docker Hub username
-      DOCKER_HUB_PASSWORD: dckr_pat_KOReBZIOukNLyjOG_wkoevlsw2I  # Replace with your Docker Hub password
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
+
+      - name: Checkout OpenTwin repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/OpenTwin'
+          path: 'OpenTwin'  # Directory to clone the repository into
+
+      - name: Checkout ThirdParty repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'  # Directory to clone the repository into
+
+      - name: Set up Chocolatey
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install Visual Studio 2019 Build Tools
+        run: |
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+
+      - name: Install CMake
+        run: |
+          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+      - name: Install Rust
+        run: |
+          choco install -y rust
+
+      - name: Install Git
+        run: |
+          choco install -y git
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.2'
+
+  build-and-test:
+    runs-on: windows-latest
+    needs: setup-environment
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Checkout OpenTwin repository
+        uses: actions/checkout@v2
         with:
-          username: ${{ env.DOCKER_HUB_USERNAME }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          repository: 'OT-OpenTwin/OpenTwin'
+          path: 'OpenTwin'  # Directory to clone the repository into
 
-      - name: Build Docker image
-        run: |
-          docker build -t reeva30/try:latest .
+      - name: Checkout ThirdParty repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'  # Directory to clone the repository into
 
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push reeva30/try:latest
+      - name: Cache CMake build
+        uses: actions/cache@v3
+        with:
+          path: |
+            build
+          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-build-
 
-      - name: Run Docker container for testing
+      - name: Set up Visual Studio Build Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Generate Build Files with CMake
         run: |
-          docker run --rm reeva30/try:latest build\Release\your_test_executable.exe
+          cmake -B build -S .
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
+      - name: Check Build Artifact Size
+        run: |
+          du -sh build
+
+      - name: Save build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: build
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
+
+      - name: Upload build artifacts to S3
+        run: |
+          aws s3 cp build s3://${{ secrets.S3_BUCKET_NAME }}/build --recursive
+
+  test:
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Checkout OpenTwin repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/OpenTwin'
+          path: 'OpenTwin'  # Directory to clone the repository into
+
+      - name: Checkout ThirdParty repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'  # Directory to clone the repository into
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: build
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure
