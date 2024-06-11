@@ -6,12 +6,24 @@ on:
       - try  # Adjust the branch as needed
 
 jobs:
-  setup-environment:
+  build-and-test:
     runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Checkout OpenTwin repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'OT-OpenTwin/OpenTwin'
+          path: 'OpenTwin'  # Directory to clone the repository into
+
+      - name: Checkout ThirdParty repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'OT-OpenTwin/ThirdParty'
+          path: 'ThirdParty'  # Directory to clone the repository into
 
       - name: Set up Chocolatey
         run: |
@@ -19,9 +31,9 @@ jobs:
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
           iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      - name: Install Visual Studio 2019 Build Tools
+      - name: Install Visual Studio 2022 Build Tools
         run: |
-          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
 
       - name: Install CMake
         run: |
@@ -29,24 +41,12 @@ jobs:
 
       - name: Install Rust
         run: |
-          choco install -y rust
-
-      - name: Install Git
-        run: |
-          choco install -y git
+          choco install -y rust --version=1.76.0
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.5.2'
-
-  build-and-test:
-    runs-on: windows-latest
-    needs: setup-environment
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
       - name: Cache CMake build
         uses: actions/cache@v3
@@ -70,23 +70,24 @@ jobs:
         run: |
           cmake --build build --config Release
 
+      - name: Check Build Artifact Size
+        run: |
+          du -sh build
+
       - name: Save build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts
           path: build
 
-  test:
-    runs-on: windows-latest
-    needs: build-and-test
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ${{ secrets.AWS_REGION }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Upload build artifacts to S3
+        run: |
+          aws s3 cp build s3://my-github-artifacts-bucket/build --recursive
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
-          path: build
 
