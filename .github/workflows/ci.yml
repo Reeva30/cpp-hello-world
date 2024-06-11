@@ -43,7 +43,7 @@ jobs:
           version: '6.5.2'
           host: 'windows'
           target: 'desktop'
-          arch: 'win64_msvc2019_64'  # Adjust to match Visual Studio 2022 if necessary
+          arch: 'win64_msvc2022_64'  # Adjust to match Visual Studio 2022 if necessary
           modules: 'qtbase,qttools'  # Specify the required Qt modules
 
   build-and-test:
