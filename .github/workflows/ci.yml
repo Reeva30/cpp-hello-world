@@ -18,12 +18,7 @@ jobs:
         with:
           repository: 'OT-OpenTwin/OpenTwin'
           path: 'OpenTwin'  # Directory to clone the repository into
-     
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
+
 
       - name: Set up Chocolatey
         run: |
@@ -43,10 +38,22 @@ jobs:
         run: |
           choco install -y rust --version=1.76.0
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '6.5.2'
+      - name: Install Python and aqtinstall
+        run: |
+          choco install -y python --version 3.9.13
+          python -m pip install aqtinstall
+
+      - name: List Available Architectures
+        run: |
+          python -m aqt list-qt windows desktop --arch
+
+      - name: Install Qt using aqtinstall
+        run: |
+          python -m aqt install-qt windows desktop win64_msvc2019_64 6.6.1 --outputdir D:/a/cpp-hello-world/Qt
+
+      - name: Print Qt version information
+        run: |
+          D:/a/cpp-hello-world/Qt/6.6.1/msvc2019_64/bin/qmake -v
 
 
   build-and-test:
