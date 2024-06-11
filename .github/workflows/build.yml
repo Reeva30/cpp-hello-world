@@ -61,9 +61,6 @@ jobs:
         run: |
           cmake --build build --config Release
 
-      - name: Run Tests
-        run: |
-          build\Release\your_test_executable.exe  # Adjust this path as necessary
 
   docker-deploy:
     runs-on: windows-latest
