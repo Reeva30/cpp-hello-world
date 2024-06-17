@@ -1,4 +1,4 @@
-name: Simplified C++ Build and Test
+name: C++ CI
 
 on:
   push:
@@ -8,63 +8,74 @@ on:
 
 jobs:
   build:
-    name: Build C++ Code
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout OpenTwin repository
+      uses: actions/checkout@v2
+      with:
+        repository: 'OT-OpenTwin/OpenTwin'
+        path: 'OpenTwin'
 
-      - name: Install Visual Studio 2022 Build Tools
-        run: |
-          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
-        shell: bash
+    - name: Checkout ThirdParty repository
+      uses: actions/checkout@v3
+      with:
+        repository: 'OT-OpenTwin/ThirdParty'
+        path: 'ThirdParty'
 
+    - name: Install Visual Studio 2022 Build Tools
+      run: |
+        choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+      shell: bash
 
+    - name: Install Qt Plugin for Visual Studio 2022
+      run: |
+        choco install qtcreator --version=6.5.2
+        choco install qt5-sdk --version=5.15.2
+        # Install Qt Visual Studio Tools extension
+        powershell -command "Install-Module -Name PowerShellGet -Force -AllowClobber"
+        powershell -command "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force"
+        powershell -command "Install-Module -Name VSSetup -Force -AllowClobber"
+        powershell -command "Import-Module VSSetup"
+        powershell -command "$vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+        powershell -command "$vsId = $vs.InstanceId"
+        powershell -command "Start-Process -FilePath $vs.InstallationPath\Common7\IDE\devenv.exe -ArgumentList '/InstallVSPackage','0A5A7800-D8E3-4A6F-85D8-BC8A7B473F24' -Wait"
 
-      - name: Install Qt Plugin for Visual Studio 2022
-        run: |
-          choco install qtcreator --version=6.5.2
-          choco install qt5-sdk --version=5.15.2
-          # Install Qt Visual Studio Tools extension
-          powershell -command "Install-Module -Name PowerShellGet -Force -AllowClobber"
-          powershell -command "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force"
-          powershell -command "Install-Module -Name VSSetup -Force -AllowClobber"
-          powershell -command "Import-Module VSSetup"
-          powershell -command "$vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
-          powershell -command "$vsId = $vs.InstanceId"
-          powershell -command "Start-Process -FilePath $vs.InstallationPath\Common7\IDE\devenv.exe -ArgumentList '/InstallVSPackage','0A5A7800-D8E3-4A6F-85D8-BC8A7B473F24' -Wait"
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: '1.76.0'
+        override: true
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: '1.76.0'
-          override: true
+    - name: Setup Qt Plugin for Visual Studio 2022
+      run: |
+        # Open the IDE to trigger the Qt plugin setup
+        powershell -command "Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command','QtToolsPackage.ManageQtVersions' -Wait"
+        # Set the Qt version and path
+        powershell -command "$qtVersion = '6.6.1'"
+        powershell -command "$qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'"
+        powershell -command "Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command','QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath' -Wait"
 
-      - name: Setup Qt Plugin for Visual Studio 2022
-        run: |
-          # Open the IDE to trigger the Qt plugin setup
-          powershell -command "Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command','QtToolsPackage.ManageQtVersions' -Wait"
-          # Set the Qt version and path
-          powershell -command "$qtVersion = '6.6.1'"
-          powershell -command "$qtPath = 'X:\OpenTwin\Repo\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'"
-          powershell -command "Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command','QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath' -Wait"
+    - name: Set environment variables
+      run: |
+        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
+        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
+        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
 
-      - name: Build with Visual Studio
-        run: |
-          # Replace with your solution file name and path
-          MSBuild.exe OpenTwin/your_solution.sln /p:Configuration=Release
-        shell: bash
+    - name: Build OpenTwin using buildAll.bat
+      run: |
+        ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
+      shell: cmd
 
-      - name: Configure AWS credentials
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set default.region ${{ secrets.AWS_REGION }}
-        shell: bash
+    - name: Configure AWS credentials
+      run: |
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws configure set default.region ${{ secrets.AWS_REGION }}
+      shell: bash
 
-      - name: Upload build artifacts to S3
-        run: |
-          # Replace with your S3 bucket name
-          aws s3 cp build s3://my-github-artifacts-bucket/build --recursive
-        shell: bash
+    - name: Upload build artifacts to S3
+      run: |
+        # Replace with your S3 bucket name
+        aws s3 cp ${{ github.workspace }}\OpenTwin\Repo\Deployment s3://my-github-artifacts-bucket/deployment --recursive
+      shell: bash
