@@ -4,9 +4,9 @@ name: C++ CI with Cached Artifacts
 
 on:
   push:
-    branches: [dev]
+    branches: [TestForMain]
   pull_request:
-    branches: [dev]
+    branches: [TestForMain]
 
 jobs:
   build:
@@ -26,12 +26,14 @@ jobs:
         archives: 'qtbase'
         set-env: 'true'
 
-    - name: Install Visual Studio 2022 Build Tools
+    - name: Install Chocolatey
       run: |
-        choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
-      shell: bash
+        Set-ExecutionPolicy Bypass -Scope Process -Force; 
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
-
+    - name: Install Visual Studio 2022
+      run: choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended --includeOptional"
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -42,42 +44,34 @@ jobs:
     - name: Setup Qt Plugin for Visual Studio 2022
       shell: pwsh
       run: |
-        # Update PowerShellGet and PackageManagement
         Install-Module -Name PowerShellGet -Force -AllowClobber
         Install-Module -Name PackageManagement -Force -AllowClobber
         
-        # Install NuGet package provider if not already installed
         if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
         }
         
-        # Install and import VSSetup module
         Install-Module -Name VSSetup -Force -AllowClobber
         Import-Module VSSetup
         
-        # Get Visual Studio instance
         $vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
         
-        # Define Qt version and path
         $qtVersion = '6.6.1'
-        $qtPath = "${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64"
+        $qtPath = "$env:GITHUB_WORKSPACE\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64"
         
-        # Add Qt version to Visual Studio
         Start-Process -FilePath "$($vs.InstallationPath)\Common7\IDE\devenv.exe" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
         Start-Process -FilePath "$($vs.InstallationPath)\Common7\IDE\devenv.exe" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
-        
 
-
-    - name: Set environment variables
+    - name: Set Environment Variables
       run: |
-        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
+        [System.Environment]::SetEnvironmentVariable('DEVENV_ROOT_2022', 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE', 'Machine')
+        [System.Environment]::SetEnvironmentVariable('OPENTWIN_DEV_ROOT', "$env:GITHUB_WORKSPACE\OpenTwin\Repo", 'Machine')
 
-    - name: Build OpenTwin using buildAll.bat
+    - name: Build OpenTwin
       run: |
-        ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
-      shell: cmd
+        cd $env:GITHUB_WORKSPACE\OpenTwin\Repo\MasterBuild
+        .\buildAll.bat
+        .\createDeployment.bat
 
     - name: Configure AWS credentials
       run: |
