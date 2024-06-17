@@ -46,15 +46,19 @@ jobs:
       with:
         toolchain: '1.76.0'
         override: true
-
+        
     - name: Setup Qt Plugin for Visual Studio 2022
       run: |
-        # Open the IDE to trigger the Qt plugin setup
-        powershell -command "Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command','QtToolsPackage.ManageQtVersions' -Wait"
-        # Set the Qt version and path
+        powershell -command "Install-Module -Name PowerShellGet -Force -AllowClobber"
+        powershell -command "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force"
+        powershell -command "Install-Module -Name VSSetup -Force -AllowClobber"
+        powershell -command "Import-Module VSSetup"
+        powershell -command "$vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         powershell -command "$qtVersion = '6.6.1'"
         powershell -command "$qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'"
-        powershell -command "Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command','QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath' -Wait"
+        powershell -command "Start-Process -FilePath $($vs.InstallationPath + '\Common7\IDE\devenv.exe') -ArgumentList '/Command','QtToolsPackage.ManageQtVersions' -Wait"
+        powershell -command "Start-Process -FilePath $($vs.InstallationPath + '\Common7\IDE\devenv.exe') -ArgumentList '/Command','QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath' -Wait"
+
 
     - name: Set environment variables
       run: |
