@@ -39,33 +39,33 @@ jobs:
         toolchain: '1.76.0'
         override: true
 
+
+
     - name: Setup Qt Plugin for Visual Studio 2022
-      shell: pwsh
       run: |
-        # Update PowerShellGet and PackageManagement
-        Install-Module -Name PowerShellGet -Force -AllowClobber
-        Install-Module -Name PackageManagement -Force -AllowClobber
-        
-        # Install NuGet package provider if not already installed
-        if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
-            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-        }
-        
-        # Install and import VSSetup module
         Install-Module -Name VSSetup -Force -AllowClobber
         Import-Module VSSetup
-        
-        # Get Visual Studio instance
-        $vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-        
-        # Define Qt version and path
+        $vs = Get-VSSetupInstance -All
+        $installationPath = $vs[0].InstallationPath
         $qtVersion = '6.6.1'
-        $qtPath = "${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64"
-        
-        # Add Qt version to Visual Studio
-        Start-Process -FilePath "$($vs.InstallationPath)\Common7\IDE\devenv.exe" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
-        Start-Process -FilePath "$($vs.InstallationPath)\Common7\IDE\devenv.exe" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
-        
+        $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
+        Start-Process -FilePath "$installationPath\Common7\IDE\devenv.exe" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
+        Start-Process -FilePath "$installationPath\Common7\IDE\devenv.exe" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
+
+    - name: Set environment variables
+      run: |
+        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
+        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
+        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
+        echo "OPEN_TWIN_SERVICES_ADDRESS=127.0.0.1" >> $GITHUB_ENV
+        echo "OPEN_TWIN_CERTS_PATH=${{ github.workspace }}\OpenTwin\Certificates" >> $GITHUB_ENV
+        echo "OPEN_TWIN_MONGODB_ADDRESS=tls@127.0.0.1:27017" >> $GITHUB_ENV
+        echo "OPEN_TWIN_AUTH_PORT=8092" >> $GITHUB_ENV
+        echo "OPEN_TWIN_GSS_PORT=8091" >> $GITHUB_ENV
+        echo "OPEN_TWIN_LSS_PORT=8093" >> $GITHUB_ENV
+        echo "OPEN_TWIN_GDS_PORT=9094" >> $GITHUB_ENV
+        echo "OPEN_TWIN_LDS_PORT=9095" >> $GITHUB_ENV
+        echo "OPEN_TWIN_SITE_ID=1" >> $GITHUB_ENV
 
 
     - name: Set environment variables
