@@ -16,71 +16,34 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '6.5.2'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
-        archives: 'qtbase'
-        set-env: 'true'
-
-    - name: Install Chocolatey
-      run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force; 
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
     - name: Install Visual Studio 2022
-      run: choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended --includeOptional"
-
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: microsoft/setup-msbuild@v1.0.2
       with:
-        toolchain: '1.76.0'
-        override: true
+          vs-version: 2022
 
-    - name: Setup Qt Plugin for Visual Studio 2022
-      shell: pwsh
+    - name: Install QT
       run: |
-        Install-Module -Name PowerShellGet -Force -AllowClobber
-        Install-Module -Name PackageManagement -Force -AllowClobber
-        
-        if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
-            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-        }
-        
-        Install-Module -Name VSSetup -Force -AllowClobber
-        Import-Module VSSetup
-        
-        $vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-        
-        $qtVersion = '6.6.1'
-        $qtPath = "$env:GITHUB_WORKSPACE\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64"
-        
-        Start-Process -FilePath "$($vs.InstallationPath)\Common7\IDE\devenv.exe" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
-        Start-Process -FilePath "$($vs.InstallationPath)\Common7\IDE\devenv.exe" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
+          # Download and install QT
+          $qtInstaller = "https://download.qt.io/official_releases/qt/6.5/6.5.2/qt-opensource-windows-x86-6.5.2.exe"
+          $qtPath = "C:/Qt/6.5.2"
+          Invoke-WebRequest -Uri $qtInstaller -OutFile qt-installer.exe
+          Start-Process -Wait -FilePath qt-installer.exe -ArgumentList "--platform minimal --script qt-noninteractive.qs --verbose --confirm-command"
 
-    - name: Set Environment Variables
+    - name: Configure QT Plugin for Visual Studio 2022
       run: |
-        [System.Environment]::SetEnvironmentVariable('DEVENV_ROOT_2022', 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE', 'Machine')
-        [System.Environment]::SetEnvironmentVariable('OPENTWIN_DEV_ROOT', "$env:GITHUB_WORKSPACE\OpenTwin\Repo", 'Machine')
+          # Setup QT plugin
+          $qtPluginInstaller = "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/qt-project/vsextensions/qt-vs-tools/2.8.0/vspackage"
+          $qtPluginPath = "$Env:APPDATA/Microsoft/VisualStudio/Extensions/qt-project/QtVsTools"
+          Invoke-WebRequest -Uri $qtPluginInstaller -OutFile qt-vs-tools.vsix
+          Start-Process -Wait -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vsixinstaller.exe" -ArgumentList "qt-vs-tools.vsix"
 
-    - name: Build OpenTwin
-      run: |
-        cd $env:GITHUB_WORKSPACE\OpenTwin\Repo\MasterBuild
-        .\buildAll.bat
-        .\createDeployment.bat
+          # Configure QT Version
+          $qtVersion = "6.5.2"
+          $qtBasePath = "C:/Qt/$qtVersion"
+          & "C:\Program Files\Qt\Tools\QtCreator\bin\qtcreator.exe" -register Qt $qtVersion $qtBasePath
 
-    - name: Configure AWS credentials
+    - name: Set up QT version and path
       run: |
-        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws configure set default.region ${{ secrets.AWS_REGION }}
-      shell: bash
-
-    - name: Upload build artifacts to S3
-      run: |
-        aws s3 cp ${{ github.workspace }}\OpenTwin\Repo\Deployment s3://my-github-artifacts-bucket/deployment --recursive
-      shell: bash
+          # Add QT to PATH
+          $env:Path += ";C:\Qt\6.5.2\bin"
+          [Environment]::SetEnvironmentVariable("Path", $env:Path, [EnvironmentVariableTarget]::Machine)
