@@ -23,9 +23,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        modules: 'qtcharts qtwebengine'
-        archives: 'qtbase qtsvg'
-        setup-python: 'true'
+        modules: 'qtbase'
         set-env: 'true'
 
     - name: Install Visual Studio 2022 Build Tools
