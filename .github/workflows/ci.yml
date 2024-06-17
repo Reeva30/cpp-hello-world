@@ -27,11 +27,15 @@ jobs:
         run: |
           choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional" -y
 
-      - name: Install QT
-        run: |
-          $qtInstaller = "https://download.qt.io/official_releases/qt/6.5/6.5.2/qt-opensource-windows-x86-6.5.2.exe"
-          Invoke-WebRequest -Uri $qtInstaller -OutFile qt-installer.exe
-          Start-Process -Wait -FilePath qt-installer.exe -ArgumentList "--platform minimal --script qt-noninteractive.qs --verbose --confirm-command"
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64'
+          dir: 'C:/Qt'
 
       - name: Configure QT Plugin for Visual Studio 2022
         run: |
