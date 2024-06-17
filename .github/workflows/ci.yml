@@ -13,37 +13,34 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install Visual Studio 2022
-      uses: microsoft/setup-msbuild@v1.0.2
-      with:
+      - name: Install Visual Studio 2022
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
           vs-version: 2022
+          components: 'Microsoft.VisualStudio.Workload.VCTools;Microsoft.VisualStudio.Component.VC.ATL'
 
-    - name: Install QT
-      run: |
+      - name: Install QT
+        run: |
           # Download and install QT
           $qtInstaller = "https://download.qt.io/official_releases/qt/6.5/6.5.2/qt-opensource-windows-x86-6.5.2.exe"
-          $qtPath = "C:/Qt/6.5.2"
           Invoke-WebRequest -Uri $qtInstaller -OutFile qt-installer.exe
           Start-Process -Wait -FilePath qt-installer.exe -ArgumentList "--platform minimal --script qt-noninteractive.qs --verbose --confirm-command"
 
-    - name: Configure QT Plugin for Visual Studio 2022
-      run: |
-          # Setup QT plugin
+      - name: Configure QT Plugin for Visual Studio 2022
+        run: |
+          # Download and install the QT plugin for Visual Studio
           $qtPluginInstaller = "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/qt-project/vsextensions/qt-vs-tools/2.8.0/vspackage"
-          $qtPluginPath = "$Env:APPDATA/Microsoft/VisualStudio/Extensions/qt-project/QtVsTools"
           Invoke-WebRequest -Uri $qtPluginInstaller -OutFile qt-vs-tools.vsix
           Start-Process -Wait -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vsixinstaller.exe" -ArgumentList "qt-vs-tools.vsix"
 
-          # Configure QT Version
-          $qtVersion = "6.5.2"
-          $qtBasePath = "C:/Qt/$qtVersion"
-          & "C:\Program Files\Qt\Tools\QtCreator\bin\qtcreator.exe" -register Qt $qtVersion $qtBasePath
-
-    - name: Set up QT version and path
-      run: |
+      - name: Set up QT version and path
+        run: |
+          # Set QT environment variables
+          [Environment]::SetEnvironmentVariable("QT_VERSION", "6.5.2", [System.EnvironmentVariableTarget]::Machine)
+          [Environment]::SetEnvironmentVariable("QT_DIR", "C:\Qt\6.5.2", [System.EnvironmentVariableTarget]::Machine)
           # Add QT to PATH
           $env:Path += ";C:\Qt\6.5.2\bin"
-          [Environment]::SetEnvironmentVariable("Path", $env:Path, [EnvironmentVariableTarget]::Machine)
+          [Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::Machine)
