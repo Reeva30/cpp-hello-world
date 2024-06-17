@@ -2,9 +2,9 @@ name: Simplified C++ Build and Test
 
 on:
   push:
-    branches: [dev]
+    branches: [AWSDemo]
   pull_request:
-    branches: [dev]
+    branches: [AWSDemo]
 
 jobs:
   build:
