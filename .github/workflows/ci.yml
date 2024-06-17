@@ -23,7 +23,8 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        modules: 'qtbase,qttools'
+        modules: 'qtcharts qtwebengine'
+        archives: 'qtbase qtsvg'
         setup-python: 'true'
         set-env: 'true'
 
