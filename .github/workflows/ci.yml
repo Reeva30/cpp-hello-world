@@ -43,29 +43,11 @@ jobs:
 
     - name: Setup Qt Plugin for Visual Studio 2022
       run: |
-        Install-Module -Name VSSetup -Force -AllowClobber
-        Import-Module VSSetup
-        $vs = Get-VSSetupInstance -All
-        $installationPath = $vs[0].InstallationPath
         $qtVersion = '6.6.1'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        Start-Process -FilePath "$installationPath\Common7\IDE\devenv.exe" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
-        Start-Process -FilePath "$installationPath\Common7\IDE\devenv.exe" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
+        Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
+        Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe' -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
 
-    - name: Set environment variables
-      run: |
-        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
-        echo "OPEN_TWIN_SERVICES_ADDRESS=127.0.0.1" >> $GITHUB_ENV
-        echo "OPEN_TWIN_CERTS_PATH=${{ github.workspace }}\OpenTwin\Certificates" >> $GITHUB_ENV
-        echo "OPEN_TWIN_MONGODB_ADDRESS=tls@127.0.0.1:27017" >> $GITHUB_ENV
-        echo "OPEN_TWIN_AUTH_PORT=8092" >> $GITHUB_ENV
-        echo "OPEN_TWIN_GSS_PORT=8091" >> $GITHUB_ENV
-        echo "OPEN_TWIN_LSS_PORT=8093" >> $GITHUB_ENV
-        echo "OPEN_TWIN_GDS_PORT=9094" >> $GITHUB_ENV
-        echo "OPEN_TWIN_LDS_PORT=9095" >> $GITHUB_ENV
-        echo "OPEN_TWIN_SITE_ID=1" >> $GITHUB_ENV
 
 
     - name: Set environment variables
