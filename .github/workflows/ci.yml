@@ -16,16 +16,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: 'qtbase,qttools'
+        setup-python: 'true'
+        set-env: 'true'
+
     - name: Install Visual Studio 2022 Build Tools
       run: |
         choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
       shell: bash
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '6.5.2'
-        modules: 'qtbase,qttools'
+
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
