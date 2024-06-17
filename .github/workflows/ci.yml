@@ -37,8 +37,7 @@ jobs:
     - name: Install Visual Studio 2022 Build Tools
       run: |
         choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
-      shell: bash
-
+      shell: cmd
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -51,6 +50,11 @@ jobs:
       run: |
         $qtVersion = '6.6.1'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
+        $vsSetupModule = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
+        & $vsSetupModule
+        Write-Output "[Paths]" > qt.conf
+        Write-Output "Prefix=$qtPath" >> qt.conf
+        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
 
         
     - name: Set environment variables
