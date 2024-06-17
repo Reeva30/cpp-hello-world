@@ -26,8 +26,8 @@ jobs:
         archives: 'qtbase'
         set-env: 'true'
 
-    - name: Install Visual Studio 2022 Community
-      run: choco install -y visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+    - name: Install Visual Studio 2022 Build Tools
+      run: choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
       shell: cmd
 
 
@@ -42,9 +42,7 @@ jobs:
       run: |
         $qtVersion = '6.5.2'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.5.2\msvc2019_64'
-        Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe' -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
-        Start-Process -FilePath 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe' -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
-
+        
     - name: Set environment variables
       run: |
         echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
