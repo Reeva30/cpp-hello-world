@@ -15,32 +15,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+  
+  
+      - name: Install Chocolatey
+        run: |
+            Set-ExecutionPolicy Bypass -Scope Process -Force; `
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
       - name: Install Visual Studio 2022
-        uses: microsoft/setup-msbuild@v1.0.2
-        with:
-          vs-version: 2022
-          components: 'Microsoft.VisualStudio.Workload.VCTools;Microsoft.VisualStudio.Component.VC.ATL'
+        run: |
+          choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional" -y
 
       - name: Install QT
         run: |
-          # Download and install QT
           $qtInstaller = "https://download.qt.io/official_releases/qt/6.5/6.5.2/qt-opensource-windows-x86-6.5.2.exe"
           Invoke-WebRequest -Uri $qtInstaller -OutFile qt-installer.exe
           Start-Process -Wait -FilePath qt-installer.exe -ArgumentList "--platform minimal --script qt-noninteractive.qs --verbose --confirm-command"
 
       - name: Configure QT Plugin for Visual Studio 2022
         run: |
-          # Download and install the QT plugin for Visual Studio
           $qtPluginInstaller = "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/qt-project/vsextensions/qt-vs-tools/2.8.0/vspackage"
           Invoke-WebRequest -Uri $qtPluginInstaller -OutFile qt-vs-tools.vsix
           Start-Process -Wait -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vsixinstaller.exe" -ArgumentList "qt-vs-tools.vsix"
 
       - name: Set up QT version and path
         run: |
-          # Set QT environment variables
           [Environment]::SetEnvironmentVariable("QT_VERSION", "6.5.2", [System.EnvironmentVariableTarget]::Machine)
           [Environment]::SetEnvironmentVariable("QT_DIR", "C:\Qt\6.5.2", [System.EnvironmentVariableTarget]::Machine)
-          # Add QT to PATH
           $env:Path += ";C:\Qt\6.5.2\bin"
           [Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::Machine)
