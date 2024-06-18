@@ -42,26 +42,24 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: '1.76.0'
+        toolchain: '1.56.1-x86_64-pc-windows-msvc'
         override: true
-        
 
     - name: Setup Qt Plugin for Visual Studio 2022
       run: |
         $qtVersion = '6.6.1'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        $vsSetupModule = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
-        & $vsSetupModule
-        Write-Output "[Paths]" > qt.conf
-        Write-Output "Prefix=$qtPath" >> qt.conf
-        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
+        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
+        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
+      shell: powershell
 
-        
     - name: Set environment variables
       run: |
         echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
         echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
+        echo "DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
+        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.5.2\msvc2019_64" >> $GITHUB_ENV
+        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.5.2\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
 
     - name: Build OpenTwin using buildAll.bat
       run: |
@@ -84,6 +82,5 @@ jobs:
 
     - name: Upload build artifacts to S3
       run: |
-        # Replace with your S3 bucket name
         aws s3 cp ${{ github.workspace }}\OpenTwin\Repo\Deployment s3://my-github-artifacts-bucket/deployment --recursive
       shell: bash
