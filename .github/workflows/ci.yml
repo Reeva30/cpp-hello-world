@@ -1,5 +1,3 @@
-
-
 name: C++ CI with Cached Artifacts
 
 on:
@@ -22,7 +20,7 @@ jobs:
       shell: cmd
 
     - name: Install Qt Visual Studio Tools Extension
-        run: |
+      run: |
           choco install -y visualstudio2022-qtvstools
-        shell: cmd
+      shell: cmd
 
