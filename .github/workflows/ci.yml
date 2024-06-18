@@ -31,8 +31,13 @@ jobs:
       run: |
         powershell -command "Install-Module -Name VSSetup -Force -AllowClobber"
         powershell -command "Import-Module VSSetup"
-        powershell -command "$vs = Get-VSSetupInstance -All"
-        powershell -command "Start-Process -FilePath $vs.InstallationPath\Common7\IDE\devenv.exe -ArgumentList '/InstallVSPackage','0A5A7800-D8E3-4A6F-85D8-BC8A7B473F24' -Wait"
-      shell: cmd
+        powershell -command "$vs = Get-VSSetupInstance -All | Where-Object { $_.InstallationPath -ne $null }"
+        if ($vs -ne $null) {
+          $vsPath = $vs[0].InstallationPath
+          Start-Process -FilePath "$vsPath\Common7\IDE\devenv.exe" -ArgumentList '/InstallVSPackage','0A5A7800-D8E3-4A6F-85D8-BC8A7B473F24' -Wait
+        } else {
+          Write-Error "Visual Studio instance not found"
+        }
+      shell: powershell
 
 
