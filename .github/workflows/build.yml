@@ -14,29 +14,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Chocolatey
-      run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force; `
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
-        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    - name: Install Visual Studio 2022
+      uses: microsoft/setup-msbuild@v1.0.2
+      with:
+        vs-version: 2022
 
-    - name: Install Visual Studio 2022 Build Tools
+    - name: Install Qt Visual Studio Tools extension
       run: |
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional" -y
+        $ErrorActionPreference = 'Stop'
+        Invoke-WebRequest -Uri "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/qtproject/vsextensions/vstools/2.9.3/vspackage" -OutFile "QtVsTools.vsix"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Community" --addProductLang QtVsTools.vsix --quiet --wait
 
-    - name: Install Qt and Tools
-      run: |
-        choco install qtcreator --version=4.15.0 -y
-        choco install qt5-sdk --version=5.15.2 -y
-        choco install qt-vs-tools -y
-
-    - name: Add Qt to PATH
-      run: |
-        $qtPath = "C:\Qt\5.15.2\msvc2019_64\bin"
-        [Environment]::SetEnvironmentVariable("Path", [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine) + ";$qtPath", [System.EnvironmentVariableTarget]::Machine)
-
-    - name: Verify Qt Installation
-      run: |
-        qmake --version
-        qtcreator --version
 
