@@ -44,15 +44,20 @@ jobs:
       with:
         toolchain: '1.56.1-x86_64-pc-windows-msvc'
         override: true
-
-    - name: Setup Qt Plugin for Visual Studio 2022
+        
+    - name: Install and Setup Qt Plugin for Visual Studio 2022
       run: |
+        # Install the Qt Visual Studio Tools extension
+        choco install -y qtvisualstudiotools
+
+        # Set up the Qt version and path in Visual Studio
         $qtVersion = '6.6.1'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        echo "[Paths]" > qt.conf
-        echo "Prefix=$qtPath" >> qt.conf
-        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe" /Command "QtToolsPackage.ManageQtVersions"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe" /Command "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath"
       shell: powershell
+
 
     - name: Set environment variables
       run: |
