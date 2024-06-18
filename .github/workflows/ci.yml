@@ -21,15 +21,8 @@ jobs:
         choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
       shell: cmd
 
-    - name: Install Qt
-      run: |
-        choco install -y qt-installer
-        powershell -command "& {Start-Process -Wait -FilePath 'C:\ProgramData\chocolatey\lib\qt-installer\tools\QtInstaller.exe' -ArgumentList '--platform minimal --script qt-noninteractive.qs'}"
-      shell: cmd
-
-    - name: Setup Visual Studio and Qt Visual Studio Tools extension
-      run: |
-        echo "Running Visual Studio setup script"
-        powershell -File ${{ github.workspace }}/setup-vs.ps1
-
+    - name: Install Qt Visual Studio Tools Extension
+        run: |
+          choco install -y visualstudio2022-qtvstools
+        shell: cmd
 
