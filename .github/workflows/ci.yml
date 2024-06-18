@@ -50,6 +50,11 @@ jobs:
       run: |
         $qtVersion = '6.6.1'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
+        $vsSetupModule = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
+        & $vsSetupModule
+        Write-Output "[Paths]" > qt.conf
+        Write-Output "Prefix=$qtPath" >> qt.conf
+        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
 
         
     - name: Set environment variables
