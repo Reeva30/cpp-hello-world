@@ -16,64 +16,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '6.6.1'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
-        archives: 'qtbase'
-        setup-python: 'true'
-        set-env: 'true'
-
     - name: Install Visual Studio 2022 Build Tools
       run: |
         choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
       shell: cmd
 
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: '1.56.1-x86_64-pc-windows-msvc'
-        override: true
-
-    - name: Setup Qt Plugin for Visual Studio 2022
+    - name: Install Qt Visual Studio Tools extension
       run: |
-        $qtVersion = '6.6.1'
-        $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        $vsSetupModule = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
-        & $vsSetupModule
-        Write-Output "[Paths]" > qt.conf
-        Write-Output "Prefix=$qtPath" >> qt.conf
-        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
-      shell: powershell
-
-    - name: Set environment variables
-      run: |
-        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
-        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
-        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
-
-    - name: Build OpenTwin using buildAll.bat
-      run: |
-        set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
-        set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
-        set DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE
-        ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
+        choco install -y qt5-sdk
+        powershell -command "Install-Module -Name PowerShellGet -Force -AllowClobber"
+        powershell -command "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force"
+        powershell -command "Install-Module -Name VSSetup -Force -AllowClobber"
+        powershell -command "Import-Module VSSetup"
+        powershell -command "$vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+        powershell -command "$vsId = $vs.InstanceId"
+        powershell -command "Start-Process -FilePath $vs.InstallationPath\Common7\IDE\devenv.exe -ArgumentList '/InstallVSPackage','0A5A7800-D8E3-4A6F-85D8-BC8A7B473F24' -Wait"
       shell: cmd
 
 
-    - name: Configure AWS credentials
-      run: |
-        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws configure set default.region ${{ secrets.AWS_REGION }}
-      shell: bash
-
-    - name: Upload build artifacts to S3
-      run: |
-        aws s3 cp ${{ github.workspace }}\OpenTwin\Repo\Deployment s3://my-github-artifacts-bucket/deployment --recursive
-      shell: bash
