@@ -34,9 +34,9 @@ jobs:
         setup-python: 'true'
         set-env: 'true'
 
-    - name: Install Visual Studio 2022 Build Tools
+    - name: Install Visual Studio 2022 Community
       run: |
-        choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+        choco install -y visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --includeRecommended"
       shell: cmd
 
     - name: Install Rust
@@ -44,26 +44,26 @@ jobs:
       with:
         toolchain: '1.56.1-x86_64-pc-windows-msvc'
         override: true
-        
-    - name: Install and Setup Qt Plugin for Visual Studio 2022
+
+    - name: Install Qt Visual Studio Tools
       run: |
         # Install the Qt Visual Studio Tools extension
-        choco install -y qtvisualstudiotools
-
-        # Set up the Qt version and path in Visual Studio
-        $qtVersion = '6.6.1'
-        $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
-        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe" /Command "QtToolsPackage.ManageQtVersions"
-        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe" /Command "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath"
+        Start-Process -Wait -FilePath "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" -ArgumentList "/InstallVSPackage", "{77A93D7B-91BD-4b1c-B7A3-D341D5B4F8B1}"
       shell: powershell
 
+    - name: Setup Qt Plugin for Visual Studio 2022
+      run: |
+        $qtVersion = '6.6.1'
+        $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
+        & "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" /Command "QtToolsPackage.ManageQtVersions"
+        & "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" /Command "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath"
+      shell: powershell
 
     - name: Set environment variables
       run: |
         echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
         echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
+        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE" >> $GITHUB_ENV
         echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
         echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
 
@@ -71,7 +71,7 @@ jobs:
       run: |
         set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
         set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
-        set DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE
+        set DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE
         ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
       shell: cmd
 
