@@ -19,8 +19,32 @@ jobs:
         choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
       shell: cmd
 
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+          version: '6.6.1'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          setup-python: 'true'
+          set-env: 'true'
+
+    - name: Print Qt version information
+      run: qmake -v
+
     - name: Install Qt Visual Studio Tools Extension
       run: |
-          choco install -y visualstudio2022-qtvstools
-      shell: cmd
+          # Install Qt Visual Studio Tools using vs_installer.exe
+          $vsInstallerPath = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $vsExtensionId = "VisualCppTools.QT"
 
+          # Query the extension to check if it's installed
+          $extensionInstalled = & "$vsInstallerPath" query --products Microsoft.VisualStudio.Product.BuildTools --skuId 2c298b35-07da-445f-9a75-13eef3f961b5 --includeRecommended --lang en-US | Select-String -Pattern $vsExtensionId
+
+          # If not installed, install the extension
+          if (-not $extensionInstalled) {
+            & "$vsInstallerPath" install --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --passive --norestart --includeRecommended --productId Microsoft.VisualStudio.Product.BuildTools --skuId 2c298b35-07da-445f-9a75-13eef3f961b5 --add $vsExtensionId
+          } else {
+            Write-Host "Qt Visual Studio Tools extension already installed."
+          }
+      shell: powershell
