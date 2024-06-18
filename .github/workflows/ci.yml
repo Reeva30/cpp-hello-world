@@ -26,7 +26,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.5.2'
+        version: '6.6.1'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
@@ -49,8 +49,11 @@ jobs:
       run: |
         $qtVersion = '6.6.1'
         $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat" -ArgumentList '/Command', 'QtToolsPackage.ManageQtVersions' -Wait
-        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat" -ArgumentList '/Command', "QtToolsPackage.ManageQtVersions.AddVersion,$qtVersion,$qtPath" -Wait
+        $vsSetupModule = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\vsdevcmd.bat"
+        & $vsSetupModule
+        Write-Output "[Paths]" > qt.conf
+        Write-Output "Prefix=$qtPath" >> qt.conf
+        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
       shell: powershell
 
     - name: Set environment variables
@@ -58,8 +61,8 @@ jobs:
         echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
         echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
         echo "DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
-        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.5.2\msvc2019_64" >> $GITHUB_ENV
-        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.5.2\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
+        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
+        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
 
     - name: Build OpenTwin using buildAll.bat
       run: |
