@@ -17,26 +17,23 @@ jobs:
         repository: 'OT-OpenTwin/OpenTwin'
         path: 'OpenTwin'
 
-    - name: Checkout ThirdParty repository
-      uses: actions/checkout@v3
-      with:
-        repository: 'OT-OpenTwin/ThirdParty'
-        path: 'ThirdParty'
 
     - name: Install Visual Studio 2022 Build Tools
       run: |
         choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
       shell: cmd
 
-    - name: Install Qt Visual Studio Tools extension
+    - name: Install Qt
       run: |
-        choco install -y qt5-sdk
-        powershell -command "Install-Module -Name PowerShellGet -Force -AllowClobber"
-        powershell -command "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force"
+        choco install -y qt-installer
+        powershell -command "& {Start-Process -Wait -FilePath 'C:\ProgramData\chocolatey\lib\qt-installer\tools\QtInstaller.exe' -ArgumentList '--platform minimal --script qt-noninteractive.qs'}"
+      shell: cmd
+
+    - name: Install VSSetup module and Qt Visual Studio Tools extension
+      run: |
         powershell -command "Install-Module -Name VSSetup -Force -AllowClobber"
         powershell -command "Import-Module VSSetup"
-        powershell -command "$vs = Get-VSSetupInstance -All -Requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
-        powershell -command "$vsId = $vs.InstanceId"
+        powershell -command "$vs = Get-VSSetupInstance -All"
         powershell -command "Start-Process -FilePath $vs.InstallationPath\Common7\IDE\devenv.exe -ArgumentList '/InstallVSPackage','0A5A7800-D8E3-4A6F-85D8-BC8A7B473F24' -Wait"
       shell: cmd
 
