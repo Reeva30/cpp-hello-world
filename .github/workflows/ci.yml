@@ -70,6 +70,10 @@ jobs:
         set DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE
         ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
       shell: cmd
+      
+    - name: List files for debugging
+      run: dir ${{ github.workspace }}\OpenTwin\Repo\Deployment
+      shell: cmd
 
     - name: Configure AWS credentials
       run: |
