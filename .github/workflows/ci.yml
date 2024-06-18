@@ -72,6 +72,7 @@ jobs:
         ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
       shell: cmd
       
+      
     - name: List files for debugging
       run: dir ${{ github.workspace }}\OpenTwin\Repo\Deployment
       shell: cmd
