@@ -36,7 +36,6 @@ jobs:
     - name: List files in the main project repository
       run: dir OpenTwin
 
-
     # Step 7: Set environment variables and check paths
     - name: Set environment variables and check paths
       run: |
