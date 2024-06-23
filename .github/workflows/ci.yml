@@ -17,18 +17,6 @@ jobs:
         repository: 'OT-OpenTwin/OpenTwin'
         path: 'OpenTwin'
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '6.6.1'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
-        setup-python: 'true'
-        set-env: 'true'
-
-    - name: Print Qt version information
-      run: qmake -v
 
     - name: Install Visual Studio 2022 Build Tools
       run: |
@@ -42,27 +30,17 @@ jobs:
         toolchain: '1.76.0'
         override: true
 
-    - name: Setup Qt Plugin for Visual Studio 2022
-      run: |
-        $qtVersion = '6.6.1'
-        $qtPath = '${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64'
-        echo "[Paths]" > qt.conf
-        echo "Prefix=$qtPath" >> qt.conf
-        Copy-Item qt.conf -Destination "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
-      shell: powershell
+   
 
     - name: Set environment variables
       run: |
         echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
         echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
-        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
         echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
 
     - name: Build OpenTwin using buildAll.bat
       run: |
         set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
-        set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
         set DEVENV_ROOT_2022=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE
         ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat
       shell: cmd
