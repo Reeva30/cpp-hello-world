@@ -18,15 +18,9 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    - name: Install Chocolatey
+    - name: Install Visual Studio 2022 with C++ Compilers using Chocolatey
       run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force; 
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
-    - name: Install Visual Studio 2022 using Chocolatey
-      run: |
-        choco install visualstudio2022community --params "'/Quiet /NoRestart /IncludeRecommended'" -y
+        choco install visualstudio2022buildtools --params "'/Quiet /NoRestart /IncludeRecommended /InstallPath C:\\BuildTools /IncludeOptional /Add Microsoft.VisualStudio.Workload.VCTools'" -y
 
     - name: Install vswhere using Chocolatey
       run: choco install vswhere -y
@@ -34,12 +28,11 @@ jobs:
     - name: Find Visual Studio 2022 Path
       id: find-vs2022-path
       run: |
-        $vsPath = & vswhere -latest -products * -requires Microsoft.VisualStudio.Component.CoreEditor -property installationPath
+        $vsPath = & vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
         echo "VS2022_PATH=$vsPath" >> $env:GITHUB_ENV
 
     - name: Display Visual Studio 2022 Path
       run: echo "Visual Studio 2022 is installed at ${{ env.VS2022_PATH }}"
-
       
     # Step 4: Install Rust 1.76.0
     - name: Install Rust 1.76.0
