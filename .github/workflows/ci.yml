@@ -26,16 +26,13 @@ jobs:
     - name: Set up Visual Studio 2022 environment
       id: vs-setup
       run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath > path.txt
-          set /p VS_PATH=<path.txt
-          echo "Raw Visual Studio 2022 path: $VS_PATH"
-          dir /S /B /A:D "%VS_PATH%\Common7\IDE" > ide_path.txt
-          set /p IDE_PATH=<ide_path.txt
-          echo "Visual Studio 2022 IDE path: $IDE_PATH"
+          # Locate Visual Studio 2022 IDE path
+          for /F "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VS_PATH=%%i"
+          echo "Visual Studio 2022 IDE path: %VS_PATH%\Common7\IDE"
 
     - name: Use Visual Studio 2022 IDE path
       run: |
-          echo "Path to Visual Studio 2022 IDE: $IDE_PATH"
+          echo "Path to Visual Studio 2022 IDE: %VS_PATH%\Common7\IDE"
 
 
       
