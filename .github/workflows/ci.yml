@@ -10,27 +10,23 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       
-    - name: Install Visual Studio Build Tools 2022
+    - name: Install Chocolatey
+      if: runner.os == 'Windows'
       shell: powershell
       run: |
-        # Download the Visual Studio Build Tools 2022 installer
-        Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vs_buildtools.exe -OutFile vs_buildtools.exe
-        
-        # Install Visual Studio Build Tools with desired workloads and components
-        Start-Process -Wait -FilePath .\vs_buildtools.exe -ArgumentList '--quiet --wait --norestart --installPath "C:\path\to\VisualStudio\BuildTools" --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.VC.MFC'
+        Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+      
+    - name: Install Visual Studio Build Tools 2022
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.VC.MFC"
         
         # Set environment variable DEVENV_ROOT_2022 to the installation path
-        $env:DEVENV_ROOT_2022 = "C:\path\to\VisualStudio\BuildTools"
-        Write-Host "Installed Visual Studio Build Tools 2022 at $env:DEVENV_ROOT_2022"
-        
-    - name: Set up environment variables
-      shell: powershell
-      run: |
-        # Output the environment variable to be picked up by subsequent steps
+        $env:DEVENV_ROOT_2022 = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\SxS\VS7" -Name "17.0").17.0
         Write-Output "DEVENV_ROOT_2022=$env:DEVENV_ROOT_2022" >> $GITHUB_ENV
         
     - name: Verify installation
-      shell: powershell
       run: |
         # Verify installation by checking if DEVENV_ROOT_2022 is set correctly
-        Write-Host "Visual Studio Build Tools 2022 installed at $env:DEVENV_ROOT_2022"
+        echo "Visual Studio Build Tools 2022 installed at $env:DEVENV_ROOT_2022"
