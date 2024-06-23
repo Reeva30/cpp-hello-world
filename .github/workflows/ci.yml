@@ -7,20 +7,42 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - name: Checkout code
+
+    # Step 1: Check out the main project repository
+    - name: Check out the main project repository
       uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/OpenTwin
+        ref: Ci
+        path: OpenTwin
+
+
+
+    # Step 4: Install Rust 1.76.0
+    - name: Install Rust 1.76.0
+      run: |
+        choco install rust --version=1.76.0 -y
+      shell: cmd
+
+    # Step 5: Display the files in the main project repository
+    - name: List files in the main project repository
+      run: dir OpenTwin
+
 
     - name: Install Visual Studio Build Tools
       run: |
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.TestTools.BuildTools --includeOptional" -y
         choco install visualstudio2022-workload-vctools -y
-    - name: Add MSBuild to PATH
+    - name: Add MSBuild to PATH and set DEVENV_ROOT_2022
       run: |
+        $msbuildDir = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin'
         echo "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin" | Out-File -Append -FilePath $env:GITHUB_PATH
-
-    - name: Print PATH variable
+        echo "set DEVENV_ROOT_2022=$msbuildDir" | Out-File -Append -FilePath $env:GITHUB_ENV
+    
+    - name: Print PATH and DEVENV_ROOT_2022 variables
       run: |
         echo $env:Path
+        echo $env:DEVENV_ROOT_2022
 
     - name: Check directory contents
       run: |
@@ -35,3 +57,57 @@ jobs:
     - name: Print MSBuild Version
       run: |
         msbuild -version
+
+
+
+    # Step 7: Set environment variables and check paths
+    - name: Set environment variables and check paths
+      run: |
+        cd OpenTwin
+        echo "Current directory: %cd%"
+        set OPENTWIN_DEV_ROOT=%cd%
+        set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty"
+        echo "Checking if BuildAll.bat exists..."
+        if exist .\Scripts\BuildAndTest\BuildAll.bat (
+          echo "BuildAll.bat exists."
+        ) else (
+          echo "BuildAll.bat does not exist."
+          exit /b 1
+        )
+        echo "Checking if RebuildAll.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
+          echo "RebuildAll.bat exists."
+        ) else (
+          echo "RebuildAll.bat does not exist."
+        )
+        echo "Checking if CheckForFailedBuilds.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
+          echo "CheckForFailedBuilds.bat exists."
+        ) else (
+          echo "CheckForFailedBuilds.bat does not exist."
+        )
+        echo "All checks passed."
+      shell: cmd
+
+    # Step 8: Run the BuildAll.bat script and capture log
+    - name: Run BuildAll.bat and capture log
+      run: |
+        cd OpenTwin
+        echo "Starting BuildAll.bat..."
+        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
+        type build.log
+      shell: cmd
+
+    # Step 9: Upload build log artifact
+    - name: Upload build log
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log
+        path: OpenTwin\build.log
+
+
