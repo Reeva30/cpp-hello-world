@@ -31,6 +31,13 @@ jobs:
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait"
       shell: cmd
 
+    - name: Find Visual Studio 2022 IDE path
+      run: |
+          $vsPath = Get-ChildItem -Path "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" -Filter devenv.exe -Recurse | Select-Object -First 1
+          Write-Output "Visual Studio IDE found at $($vsPath.FullName)"
+      shell: powershell
+
+      
     # Step 4: Install Rust 1.76.0
     - name: Install Rust 1.76.0
       run: |
