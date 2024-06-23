@@ -10,18 +10,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install Visual Studio 2022 Build Tools
+    - name: Install Visual Studio Build Tools
       run: |
-        choco install visualstudio2022buildtools -y
-
-    - name: Print Visual Studio 2022 IDE path
-      id: print-vs-path
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.TestTools.BuildTools --includeOptional" -y
+        choco install visualstudio2022-workload-vctools -y
+    - name: Add MSBuild to PATH
       run: |
-        $VSInstallPath = Get-ItemProperty "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\SxS\VS7"
-        Write-Output "Visual Studio 2022 IDE is installed at: $($VSInstallPath.Default)"
-        echo "::set-output name=path::$($VSInstallPath.Default)"
-
-    - name: List files in Visual Studio 2022 Build Tools directory
+        echo "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin" | Out-File -Append -FilePath $env:GITHUB_PATH
+    - name: Print MSBuild Version
       run: |
-        $vsPath = ${{ steps.print-vs-path.outputs.path }}
-        Get-ChildItem -Path $vsPath -Recurse | Select-Object -ExpandProperty FullName
+        msbuild -version
