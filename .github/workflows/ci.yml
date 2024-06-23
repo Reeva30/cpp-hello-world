@@ -21,6 +21,16 @@ jobs:
     - name: Print PATH variable
       run: |
         echo $env:Path
+
+    - name: Check directory contents
+      run: |
+        $msbuildDir = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin'
+        if (Test-Path $msbuildDir) {
+          Get-ChildItem -Path $msbuildDir
+        } else {
+          Write-Output "MSBuild directory not found at $msbuildDir"
+          exit 1
+        }
     
     - name: Print MSBuild Version
       run: |
