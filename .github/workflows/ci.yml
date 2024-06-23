@@ -10,26 +10,28 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # Step 1: Create base directory
-    - name: Create base directory
-      run: |
-        mkdir C:\OT-OpenTwin
-      shell: cmd
-
-    # Step 2: Check out the main project repository
+    # Step 1: Check out the main project repository
     - name: Check out the main project repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
-        path: C:\OT-OpenTwin\OpenTwin
+        path: OpenTwin
 
-    # Step 3: Check out the third-party repository
+    # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
-        path: C:\OT-OpenTwin\ThirdParty
+        path: ThirdParty
+
+    # Step 3: Move repositories to C:\OT-OpenTwin
+    - name: Move repositories to C drive
+      run: |
+        mkdir C:\OT-OpenTwin
+        move OpenTwin C:\OT-OpenTwin\OpenTwin
+        move ThirdParty C:\OT-OpenTwin\ThirdParty
+      shell: cmd
 
     # Step 4: Install Visual Studio 2022 Build Tools
     - name: Install Visual Studio 2022 Build Tools
