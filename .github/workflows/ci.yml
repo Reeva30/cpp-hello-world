@@ -36,9 +36,6 @@ jobs:
     - name: List files in the main project repository
       run: dir OpenTwin
 
-    # Step 6: Display the files in the third-party repository
-    - name: List files in the third-party repository
-      run: dir ThirdParty
 
     # Step 7: Set environment variables and check paths
     - name: Set environment variables and check paths
