@@ -17,6 +17,11 @@ jobs:
     - name: Add MSBuild to PATH
       run: |
         echo "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+    - name: Print PATH variable
+      run: |
+        echo $env:Path
+    
     - name: Print MSBuild Version
       run: |
         msbuild -version
