@@ -1,69 +1,58 @@
-name: C/C++ CI
+name: Build OpenTwin
 
 on:
   push:
-    branches: [ "RunBuild" ]
-  pull_request:
-    branches: [ "RunBuild" ]
+    branches:
+      - RunBuild
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-
-    - name: Checkout OpenTwin repository
+    - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        repository: 'OT-OpenTwin/OpenTwin'
+        repository: OT-OpenTwin/OpenTwin
         path: 'OpenTwin'
         ref: 'Ci'
+        
+    - name: Set up the environment
+      run: |
+        echo "OPENTWIN_DEV_ROOT=D:\a\OpenTwin" >> $GITHUB_ENV
+        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE" >> $GITHUB_ENV
 
     - name: Install Chocolatey
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force; 
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));
 
-    - name: Install Visual Studio 2022 Build Tools
-      run: |
-        choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
-      shell: cmd
-      continue-on-error: true
+    - name: Install Visual Studio Build Tools
+      run: choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
 
-    - name: Install Rust 1.76.0
-      run: |
-        choco install rust --version=1.76.0 --confirm --log-file="choco_install.log"
-        type "choco_install.log"
-
-    - name: Verify Rust Installation
-      run: rustc --version
+    - name: Install Rust
+      run: rustup default stable
 
     - name: Set environment variables
-      run: |
-        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022='C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE'" >> $GITHUB_ENV
-        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
-        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
+      run: echo "OPENTWIN_DEV_ROOT=D:\a\OpenTwin" >> $GITHUB_ENV
 
-    - name: Print environment variables
-      run: |
-        echo %OPENTWIN_DEV_ROOT%
-        echo %OPENTWIN_THIRDPARTY_ROOT%
-        echo %DEVENV_ROOT_2022%
-        echo %QT_PLUGIN_PATH%
-      shell: cmd
+    - name: Validate environment variable
+      run: echo %OPENTWIN_DEV_ROOT%
 
-    - name: Build OpenTwin using buildAll.bat
+    - name: Run build script
       run: |
-        set "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin"
-        set "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty"
-        set "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
-        "${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\BuildAll.bat" > build_log.txt 2>&1
-        type build_log.txt
-      shell: cmd
+        set "OPENTWIN_DEV_ROOT=D:\a\OpenTwin"
+        cd %OPENTWIN_DEV_ROOT%\Repo\Deployment
+        dir
 
-    - name: List files for debugging
-      run: dir ${{ github.workspace }}\OpenTwin\Repo\Deployment
-      shell: cmd
+    - name: Build All
+      run: |
+        set "OPENTWIN_DEV_ROOT=D:\a\OpenTwin"
+        cd %OPENTWIN_DEV_ROOT%\Repo\MasterBuild
+        .\buildAll.bat
+
+    - name: Create Deployment
+      run: |
+        set "OPENTWIN_DEV_ROOT=D:\a\OpenTwin"
+        cd %OPENTWIN_DEV_ROOT%\Repo\MasterBuild
+        .\createDeployment.bat
