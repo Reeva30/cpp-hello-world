@@ -15,6 +15,13 @@ jobs:
         choco install visualstudio2022buildtools -y
 
     - name: Print Visual Studio 2022 IDE path
+      id: print-vs-path
       run: |
         $VSInstallPath = Get-ItemProperty "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\SxS\VS7"
         Write-Output "Visual Studio 2022 IDE is installed at: $($VSInstallPath.Default)"
+        echo "::set-output name=path::$($VSInstallPath.Default)"
+
+    - name: List files in Visual Studio 2022 Build Tools directory
+      run: |
+        $vsPath = ${{ steps.print-vs-path.outputs.path }}
+        Get-ChildItem -Path $vsPath -Recurse | Select-Object -ExpandProperty FullName
