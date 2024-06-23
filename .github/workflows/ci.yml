@@ -16,9 +16,22 @@ jobs:
         repository: OT-OpenTwin/OpenTwin
         path: 'OpenTwin'
         ref: 'Ci'
+
+
+    # Step 2: Display the files in the separate repository
+    - name: List files in separate repository
+      run: dir OpenTwin
+
+    # Step 3: Run a file from the separate repository and print the path
+    - name: Run build script and print path
+      run: |
+        cd OpenTwin
+        echo "Current directory: %cd%"
+
         
     - name: Set up the environment
       run: |
+      
         echo "OPENTWIN_DEV_ROOT=D:\a\OpenTwin" >> $GITHUB_ENV
         echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE" >> $GITHUB_ENV
 
