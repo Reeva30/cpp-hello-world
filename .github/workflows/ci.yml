@@ -21,19 +21,19 @@ jobs:
     - name: Install Visual Studio 2022 Build Tools
       run: |
           choco install visualstudio2022buildtools -y
-          refreshenv
 
     - name: Set up Visual Studio 2022 environment
       id: vs-setup
       run: |
           # Locate Visual Studio 2022 IDE path
           for /F "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VS_PATH=%%i"
-          echo "Visual Studio 2022 IDE path: %VS_PATH%\Common7\IDE"
 
+          # Output the path to Visual Studio 2022 IDE for verification
+          echo "Path to Visual Studio 2022 IDE: %VS_PATH%\Common7\IDE"
+          
     - name: Use Visual Studio 2022 IDE path
       run: |
           echo "Path to Visual Studio 2022 IDE: %VS_PATH%\Common7\IDE"
-
 
       
     # Step 4: Install Rust 1.76.0
