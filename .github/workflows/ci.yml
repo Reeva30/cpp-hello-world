@@ -76,6 +76,10 @@ jobs:
           echo "CheckForFailedBuilds.bat does not exist."
         )
         echo "All checks passed."
+        echo "Starting BuildAll.bat..."
+        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
+        type build.log
       shell: cmd
 
     # Step 8: Run the BuildAll.bat script and capture log
