@@ -10,12 +10,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # Step 1: Create base directory
-    - name: Create base directory
-      run: mkdir C:\OT-OpenTwin
-      shell: cmd
-
-    # Step 2: Check out the main project repository
+    # Step 1: Check out the main project repository
     - name: Check out the main project repository
       uses: actions/checkout@v2
       with:
@@ -23,47 +18,40 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    # Step 3: Check out the third-party repository
+    # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
 
-    # Step 4: Move repositories to C:\OT-OpenTwin
-    - name: Move repositories to C drive
-      run: |
-        move OpenTwin C:\OT-OpenTwin\OpenTwin
-        move ThirdParty C:\OT-OpenTwin\ThirdParty
-      shell: cmd
-
-    # Step 5: Install Visual Studio 2022 Build Tools
+    # Step 3: Install Visual Studio 2022 Build Tools
     - name: Install Visual Studio 2022 Build Tools
       run: |
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait"
       shell: cmd
 
-    # Step 6: Install Rust 1.76.0
+    # Step 4: Install Rust 1.76.0
     - name: Install Rust 1.76.0
       run: |
         choco install rust --version=1.76.0 -y
       shell: cmd
 
-    # Step 7: Display the files in the main project repository
+    # Step 5: Display the files in the main project repository
     - name: List files in the main project repository
-      run: dir C:\OT-OpenTwin\OpenTwin
+      run: dir OpenTwin
 
-    # Step 8: Display the files in the third-party repository
+    # Step 6: Display the files in the third-party repository
     - name: List files in the third-party repository
-      run: dir C:\OT-OpenTwin\ThirdParty
+      run: dir ThirdParty
 
-    # Step 9: Set environment variables and check paths
+    # Step 7: Set environment variables and check paths
     - name: Set environment variables and check paths
       run: |
-        cd C:\OT-OpenTwin\OpenTwin
+        cd OpenTwin
         echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=C:\OT-OpenTwin
-        set OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_DEV_ROOT%\ThirdParty
+        set OPENTWIN_DEV_ROOT=%cd%
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
         set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
@@ -76,13 +64,13 @@ jobs:
           exit /b 1
         )
         echo "Checking if RebuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\OpenTwin\Scripts\BuildAndTest\RebuildAll.bat (
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
           echo "RebuildAll.bat exists."
         ) else (
           echo "RebuildAll.bat does not exist."
         )
         echo "Checking if CheckForFailedBuilds.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\OpenTwin\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
           echo "CheckForFailedBuilds.bat exists."
         ) else (
           echo "CheckForFailedBuilds.bat does not exist."
@@ -90,12 +78,12 @@ jobs:
         echo "All checks passed."
       shell: cmd
 
-    # Step 10: Run the BuildAll.bat script with environment variables set and capture log
+    # Step 8: Run the BuildAll.bat script with environment variables set and capture log
     - name: Run BuildAll.bat and capture log
       run: |
-        cd C:\OT-OpenTwin\OpenTwin
+        cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=C:\OT-OpenTwin
+        set OPENTWIN_DEV_ROOT=%cd%\..
         set OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_DEV_ROOT%\ThirdParty
         set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
         call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
@@ -103,9 +91,9 @@ jobs:
         type build.log
       shell: cmd
 
-    # Step 11: Upload build log artifact
+    # Step 9: Upload build log artifact
     - name: Upload build log
       uses: actions/upload-artifact@v2
       with:
         name: build-log
-        path: C:\OT-OpenTwin\OpenTwin\build.log
+        path: OpenTwin\build.log
