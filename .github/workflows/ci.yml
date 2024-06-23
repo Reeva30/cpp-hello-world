@@ -83,10 +83,7 @@ jobs:
       run: |
         cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd%\..
-        set OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_DEV_ROOT%\ThirdParty
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
-        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        set OPENTWIN_DEV_ROOT=%cd%\.. && set OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_DEV_ROOT%\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
         echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
         type build.log
       shell: cmd
