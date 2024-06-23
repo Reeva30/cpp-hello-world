@@ -34,22 +34,38 @@ jobs:
       run: rustup default stable
 
     - name: Set environment variables
-      run: echo "OPENTWIN_DEV_ROOT=D:\a\OpenTwin" >> $GITHUB_ENV
-
-    - name: Validate environment variable
-      run: echo %OPENTWIN_DEV_ROOT%
-
-    - name: Run build script
       run: |
-        set "OPENTWIN_DEV_ROOT=D:\a\OpenTwin"
-        cd %OPENTWIN_DEV_ROOT%\Repo\Deployment
-        dir
+        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
+        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
+        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
+        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
+        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
 
-    - name: Build All
+    - name: Print environment variables for debugging
       run: |
-        set "OPENTWIN_DEV_ROOT=D:\a\OpenTwin"
-        cd %OPENTWIN_DEV_ROOT%\Repo\MasterBuild
-        .\buildAll.bat
+        echo "OPENTWIN_DEV_ROOT=$OPENTWIN_DEV_ROOT"
+        echo "OPENTWIN_THIRDPARTY_ROOT=$OPENTWIN_THIRDPARTY_ROOT"
+        echo "DEVENV_ROOT_2022=$DEVENV_ROOT_2022"
+        echo "QT_PLUGIN_PATH=$QT_PLUGIN_PATH"
+        echo "PATH=$PATH"
+
+    - name: Build OpenTwin using buildAll.bat
+      run: |
+        set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
+        set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
+        set QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64
+        set PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;%PATH%
+        echo "Environment variables set for build:"
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "QT_PLUGIN_PATH=%QT_PLUGIN_PATH%"
+        echo "PATH=%PATH%"
+        %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat > build_log.txt 2>&1
+        type build_log.txt
+      shell: cmd
+
 
     - name: Create Deployment
       run: |
