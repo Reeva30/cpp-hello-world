@@ -18,18 +18,18 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    # Step 2: Check out the third-party repository
-    - name: Check out the third-party repository
-      uses: actions/checkout@v2
-      with:
-        repository: OT-OpenTwin/ThirdParty
-        path: ThirdParty
+
 
     # Step 3: Install Visual Studio 2022 Build Tools
     - name: Install Visual Studio 2022 Build Tools
       run: |
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait"
       shell: cmd
+
+    - name: Verify installation
+      run: |
+          & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products * -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+          
       
     # Step 4: Install Rust 1.76.0
     - name: Install Rust 1.76.0
