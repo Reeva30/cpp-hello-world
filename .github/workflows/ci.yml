@@ -10,12 +10,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Visual Studio 2022 Build Tools
-      uses: microsoft/vssetup.action/setup@v2
-      with:
-        installationPath: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools'
-        components: 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64'
+    - name: Install Visual Studio 2022 Build Tools
+      run: |
+        choco install visualstudio2022buildtools -y
 
     - name: Print Visual Studio 2022 IDE path
       run: |
-        echo "Visual Studio 2022 IDE is installed at: C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+        $VSInstallPath = Get-ItemProperty "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\SxS\VS7"
+        Write-Output "Visual Studio 2022 IDE is installed at: $($VSInstallPath.Default)"
