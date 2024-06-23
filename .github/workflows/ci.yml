@@ -18,19 +18,25 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-
-
-    # Step 3: Install Visual Studio 2022 Build Tools
     - name: Install Visual Studio 2022 Build Tools
       run: |
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait"
-      shell: cmd
+          choco install visualstudio2022buildtools -y
+          refreshenv
 
-    - name: Find Visual Studio 2022 IDE path
+    - name: Set up Visual Studio 2022 environment
+      id: vs-setup
       run: |
-          $vsPath = Get-ChildItem -Path "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" -Filter devenv.exe -Recurse | Select-Object -First 1
-          Write-Output "Visual Studio IDE found at $($vsPath.FullName)"
-      shell: powershell
+          call "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath > path.txt
+          set /p VS_PATH=<path.txt
+          echo "Raw Visual Studio 2022 path: $VS_PATH"
+          dir /S /B /A:D "%VS_PATH%\Common7\IDE" > ide_path.txt
+          set /p IDE_PATH=<ide_path.txt
+          echo "Visual Studio 2022 IDE path: $IDE_PATH"
+
+    - name: Use Visual Studio 2022 IDE path
+      run: |
+          echo "Path to Visual Studio 2022 IDE: $IDE_PATH"
+
 
       
     # Step 4: Install Rust 1.76.0
