@@ -52,7 +52,7 @@ jobs:
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
-        set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
@@ -76,10 +76,6 @@ jobs:
           echo "CheckForFailedBuilds.bat does not exist."
         )
         echo "All checks passed."
-        echo "Starting BuildAll.bat..."
-        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
-        echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
-        type build.log
       shell: cmd
 
     # Step 8: Run the BuildAll.bat script and capture log
