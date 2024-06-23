@@ -1,4 +1,4 @@
-name: Build OpenTwin
+name: Pull from separate repo and run build script
 
 on:
   push:
@@ -6,82 +6,59 @@ on:
       - RunBuild
 
 jobs:
-  build:
+  pull-other-repo:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    # Step 1: Check out the main project repository
+    - name: Check out the main project repository
+      uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/OpenTwin
-        path: 'OpenTwin'
-        ref: 'Ci'
+        ref: Ci
+        path: OpenTwin
 
+    # Step 2: Check out the third-party repository
+    - name: Check out the third-party repository
+      uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/ThirdParty
+        path: ThirdParty
 
-    # Step 2: Display the files in the separate repository
-    - name: List files in separate repository
+    # Step 3: Install Visual Studio 2022 Build Tools
+    - name: Install Visual Studio 2022 Build Tools
+      run: |
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait"
+      shell: cmd
+
+    # Step 4: Install Rust 1.76.0
+    - name: Install Rust 1.76.0
+      run: |
+        choco install rust --version=1.76.0 -y
+      shell: cmd
+
+    # Step 5: Display the files in the main project repository
+    - name: List files in the main project repository
       run: dir OpenTwin
 
-    # Step 3: Run a file from the separate repository and print the path
-    - name: Run build script and print path
+    # Step 6: Display the files in the third-party repository
+    - name: List files in the third-party repository
+      run: dir ThirdParty
+
+    # Step 7: Set environment variables and run the BuildAll.bat script
+    - name: Run BuildAll.bat and capture log
       run: |
         cd OpenTwin
         echo "Current directory: %cd%"
-
-        
-    - name: Set up the environment
-      run: |
-      
-        echo "OPENTWIN_DEV_ROOT=D:\a\OpenTwin" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE" >> $GITHUB_ENV
-
-    - name: Install Chocolatey
-      run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));
-
-    - name: Install Visual Studio Build Tools
-      run: choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
-
-    - name: Install Rust
-      run: rustup default stable
-
-    - name: Set environment variables
-      run: |
-        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-        echo "DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" >> $GITHUB_ENV
-        echo "QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64" >> $GITHUB_ENV
-        echo "PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;$PATH" >> $GITHUB_ENV
-
-    - name: Print environment variables for debugging
-      run: |
-        echo "OPENTWIN_DEV_ROOT=$OPENTWIN_DEV_ROOT"
-        echo "OPENTWIN_THIRDPARTY_ROOT=$OPENTWIN_THIRDPARTY_ROOT"
-        echo "DEVENV_ROOT_2022=$DEVENV_ROOT_2022"
-        echo "QT_PLUGIN_PATH=$QT_PLUGIN_PATH"
-        echo "PATH=$PATH"
-
-    - name: Build OpenTwin using buildAll.bat
-      run: |
-        set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
-        set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
-        set QT_PLUGIN_PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64
-        set PATH=${{ github.workspace }}\OpenTwin\Third_Party_Libraries\Qt\6.6.1\msvc2019_64\bin;%PATH%
-        echo "Environment variables set for build:"
-        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "QT_PLUGIN_PATH=%QT_PLUGIN_PATH%"
-        echo "PATH=%PATH%"
-        %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat > build_log.txt 2>&1
-        type build_log.txt
+        set OPENTWIN_DEV_ROOT=%cd%
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools"
+        .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
       shell: cmd
 
-
-    - name: Create Deployment
-      run: |
-        set "OPENTWIN_DEV_ROOT=D:\a\OpenTwin"
-        cd %OPENTWIN_DEV_ROOT%\Repo\MasterBuild
-        .\createDeployment.bat
+    # Step 8: Upload build log artifact
+    - name: Upload build log
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log
+        path: OpenTwin\build.log
