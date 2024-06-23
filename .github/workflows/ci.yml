@@ -3,7 +3,7 @@ name: Pull from separate repo and run build script
 on:
   push:
     branches:
-      - RunBuild
+      - main
 
 jobs:
   pull-other-repo:
@@ -16,14 +16,16 @@ jobs:
       with:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
-        path: OT-OpenTwin/OpenTwin
+        path: OpenTwin
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
-        path: OT-OpenTwin/ThirdParty
+        path: ThirdParty
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     # Step 3: Install Visual Studio 2022 Build Tools
     - name: Install Visual Studio 2022 Build Tools
@@ -39,53 +41,34 @@ jobs:
 
     # Step 5: Display the files in the main project repository
     - name: List files in the main project repository
-      run: dir OT-OpenTwin\OpenTwin
+      run: dir OpenTwin
 
     # Step 6: Display the files in the third-party repository
     - name: List files in the third-party repository
-      run: dir OT-OpenTwin\ThirdParty
+      run: dir ThirdParty
 
     # Step 7: Set environment variables and check paths
     - name: Set environment variables and check paths
       run: |
-        cd OT-OpenTwin\OpenTwin
+        cd OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE"
+        set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "Checking if BuildAll.bat exists..."
-        if exist .\Scripts\BuildAndTest\BuildAll.bat (
-          echo "BuildAll.bat exists."
-        ) else (
-          echo "BuildAll.bat does not exist."
+        if not exist .\Scripts\BuildAndTest\BuildAll.bat (
+          echo "BuildAll.bat does not exist"
           exit /b 1
         )
-        echo "Checking if RebuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
-          echo "RebuildAll.bat exists."
-        ) else (
-          echo "RebuildAll.bat does not exist."
-        )
-        echo "Checking if CheckForFailedBuilds.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
-          echo "CheckForFailedBuilds.bat exists."
-        ) else (
-          echo "CheckForFailedBuilds.bat does not exist."
-        )
-        echo "All checks passed."
       shell: cmd
 
-    # Step 8: Run the BuildAll.bat script with environment variables set and capture log
+    # Step 8: Run the BuildAll.bat script and capture log
     - name: Run BuildAll.bat and capture log
       run: |
-        cd OT-OpenTwin\OpenTwin
-        echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd% && set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
-        echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
-        type build.log
+        cd OpenTwin
+        set OPENTWIN_DEV_ROOT=%cd% && set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
       shell: cmd
 
     # Step 9: Upload build log artifact
@@ -93,4 +76,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: build-log
-        path: OT-OpenTwin\OpenTwin\build.log
+        path: OpenTwin\build.log
