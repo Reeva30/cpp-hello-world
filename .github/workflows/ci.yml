@@ -54,7 +54,7 @@ jobs:
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\BuildTools"
+        set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
