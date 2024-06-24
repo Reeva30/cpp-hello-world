@@ -1,13 +1,12 @@
-name: Setup Visual Studio 2022
+name: Setup and Build with Visual Studio 2022
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: windows-latest
-    
-    steps:
 
+    steps:
     # Step 1: Check out the main project repository
     - name: Check out the main project repository
       uses: actions/checkout@v2
@@ -22,89 +21,77 @@ jobs:
       with:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
+        fetch-depth: 1  # Limit fetching to the last commit
 
     # Step 3: Install Rust 1.76.0
-    - name: Install Rust 1.76.0
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.76.0
+        profile: minimal
+        override: true
+
+    # Step 4: Cache Cargo dependencies
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    # Step 5: Check if Visual Studio is installed
+    - name: Check if Visual Studio is installed
+      id: vs_check
       run: |
-        choco install rust --version=1.76.0 -y
-      shell: cmd
+        if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" (echo "::set-output name=installed::yes")
+        else (echo "::set-output name=installed::no")
 
-    # Step 4a: Display the files in the main project repository
-    - name: List files in the main project repository
-      run: dir OpenTwin
-    # Step 4b: Display the files in the thirdparty project repository
-    - name: List files in the thirdparty project repository
-      run: dir ThirdParty
-
-    # Step 5: Install Visual Studio Community Edition
+    # Step 6: Install Visual Studio 2022 Community
     - name: Install Visual Studio 2022 Community
+      if: steps.vs_check.outputs.installed == 'no'
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
 
-    # OR Step 5: Install Visual Studio Professional Edition
-    # Uncomment the following section to install the Professional edition instead of the Community edition
-    # - name: Install Visual Studio 2022 Professional
-    #   run: |
-    #     choco install visualstudio2022professional --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
-    
-    # Step 6: Add MSBuild to PATH
+    # Step 7: Add MSBuild to PATH
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-       
-    # Step 7: Print PATH variable
+
+    # Step 8: Print PATH variable
     - name: Print PATH variable
       run: |
         echo $env:Path
-    
-    # Step 8: Check directory contents
+        
+
+    # Step 9: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' 
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
           Write-Output "MSBuild directory not found at $msbuildDir"
           exit 1
         }
-    
-    # Step 9: Print MSBuild Version
+    # Step 9: Check directory contents
+    - name: Check directory contents
+      run: |
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community'
+        if (Test-Path $msbuildDir) {
+          Get-ChildItem -Path $msbuildDir
+        } else {
+          Write-Output "MSBuild directory not found at $msbuildDir"
+          exit 1
+        }
+
+    # Step 10: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
         msbuild -version
-
-    # Step 10: Set environment variables and check paths
-    - name: Set environment variables and check paths
-      run: |
-        cd OpenTwin
-        echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=%cd%
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
-        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty"
-        echo "Checking if BuildAll.bat exists..."
-        if exist .\Scripts\BuildAndTest\BuildAll.bat (
-          echo "BuildAll.bat exists."
-        ) else (
-          echo "BuildAll.bat does not exist."
-          exit /b 1
-        )
-        echo "Checking if RebuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
-          echo "RebuildAll.bat exists."
-        ) else (
-          echo "RebuildAll.bat does not exist."
-        )
-        echo "Checking if CheckForFailedBuilds.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
-          echo "CheckForFailedBuilds.bat exists."
-        ) else (
-          echo "CheckForFailedBuilds.bat does not exist."
-        )
-        echo "All checks passed."
-      shell: cmd
 
     # Step 11: Run the BuildAll.bat script and capture log
     - name: Run BuildAll.bat and capture log
@@ -115,7 +102,6 @@ jobs:
         call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1 || echo "BuildAll.bat failed with exit code %ERRORLEVEL%" >> build.log
         type build.log
       shell: cmd
-    
 
     # Step 12: Upload build log artifact
     - name: Upload build log
