@@ -51,9 +51,7 @@ jobs:
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-        # For Professional edition use:
-        # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-    
+       
     # Step 7: Print PATH variable
     - name: Print PATH variable
       run: |
@@ -62,9 +60,7 @@ jobs:
     # Step 8: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
-        # For Professional edition use:
-        # $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin'
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' 
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
@@ -110,19 +106,16 @@ jobs:
         echo "All checks passed."
       shell: cmd
 
-# Step 11: Run the BuildAll.bat script and capture log
+    # Step 11: Run the BuildAll.bat script and capture log
     - name: Run BuildAll.bat and capture log
       run: |
         cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd%
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
-        
-        CALL "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat" BOTH BUILD 2>&1 > build.log 
-        echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
+        set OPENTWIN_DEV_ROOT=%cd% && set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
+        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1 || echo "BuildAll.bat failed with exit code %ERRORLEVEL%" >> build.log
         type build.log
       shell: cmd
+    
 
     # Step 12: Upload build log artifact
     - name: Upload build log
