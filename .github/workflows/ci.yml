@@ -18,18 +18,8 @@ jobs:
         path: OpenTwin
 
 
-    # Step 3: Install Rust 1.76.0
-    - name: Install Rust 1.76.0
-      run: |
-        choco install rust --version=1.76.0 -y
-      shell: cmd
 
-    # Step 4a: Display the files in the main project repository
-    - name: List files in the main project repository
-      run: dir OpenTwin
-    # Step 4b: Display the files in the thirdparty project repository
-    - name: List files in the thirdparty project repository
-      run: dir ThirdParty
+
 
     # Step 5: Install Visual Studio Community Edition
     - name: Install Visual Studio 2022 Community
