@@ -8,41 +8,35 @@ jobs:
     
     steps:
 
-  # Step 5: Install Visual Studio Build Tools
-    - name: Install Visual Studio Build Tools
-      run: |
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.TestTools.BuildTools --includeOptional" -y
-        choco install visualstudio2022-workload-vctools -y
-
-    # Step 6: Install Visual Studio Community Edition
+# Step 5: Install Visual Studio Community Edition
     - name: Install Visual Studio 2022 Community
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
 
-    # OR Step 6: Install Visual Studio Professional Edition
+  # OR Step 5: Install Visual Studio Professional Edition
     # Uncomment the following section to install the Professional edition instead of the Community edition
-    # - name: Install Visual Studio 2022 Professional
-    #   run: |
-    #     choco install visualstudio2022professional --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+    - name: Install Visual Studio 2022 Professional
+      run: |
+         choco install visualstudio2022professional --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
     
-    # Step 7: Add MSBuild to PATH
+    # Step 6: Add MSBuild to PATH
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
         # For Professional edition use:
-        # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+         echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current' | Out-File -Append -FilePath $env:GITHUB_PATH
     
-    # Step 8: Print PATH variable
+    # Step 7: Print PATH variable
     - name: Print PATH variable
       run: |
         echo $env:Path
     
-    # Step 9: Check directory contents
+    # Step 8: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current'
         # For Professional edition use:
-        # $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin'
+         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current'
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
@@ -50,6 +44,7 @@ jobs:
           exit 1
         }
     
+
     # Step 10: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
