@@ -29,9 +29,12 @@ jobs:
         choco install rust --version=1.76.0 -y
       shell: cmd
 
-    # Step 4: Display the files in the main project repository
+    # Step 4a: Display the files in the main project repository
     - name: List files in the main project repository
       run: dir OpenTwin
+    # Step 4b: Display the files in the thirdparty project repository
+    - name: List files in the thirdparty project repository
+      run: dir ThirdParty
 
     # Step 5: Install Visual Studio Community Edition
     - name: Install Visual Studio 2022 Community
@@ -48,8 +51,8 @@ jobs:
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-     # For Professional edition use:
-     # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+        # For Professional edition use:
+        # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
     
     # Step 7: Print PATH variable
     - name: Print PATH variable
@@ -60,6 +63,8 @@ jobs:
     - name: Check directory contents
       run: |
         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
+        # For Professional edition use:
+        # $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin'
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
@@ -78,8 +83,10 @@ jobs:
         cd OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty"
         echo "Checking if BuildAll.bat exists..."
         if exist .\Scripts\BuildAndTest\BuildAll.bat (
@@ -103,12 +110,21 @@ jobs:
         echo "All checks passed."
       shell: cmd
 
-    # Step 11: Run the BuildAll.bat script and capture log
+# Step 11: Run the BuildAll.bat script and capture log
     - name: Run BuildAll.bat and capture log
       run: |
         cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        set OPENTWIN_DEV_ROOT=%cd%
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
+        
+        REM Ensure environment variables are set correctly in the current shell
+        setlocal EnableDelayedExpansion
+        set "PATH=%PATH%;%DEVENV_ROOT_2022%"
+        endlocal & set "PATH=%PATH%"
+        
+        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
         echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
         type build.log
       shell: cmd
