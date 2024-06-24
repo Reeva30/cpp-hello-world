@@ -19,7 +19,6 @@ jobs:
       with:
         repository: OT-OpenTwin/ThirdParty
         path: OT-OpenTwin/ThirdParty
-        fetch-depth: 1
 
 
     - name: Check and Install Rust 1.76.0
