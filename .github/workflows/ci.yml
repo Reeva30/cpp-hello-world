@@ -24,7 +24,7 @@ jobs:
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
         # For Professional edition use:
-         echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current' | Out-File -Append -FilePath $env:GITHUB_PATH
+         echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
     
     # Step 7: Print PATH variable
     - name: Print PATH variable
@@ -36,15 +36,33 @@ jobs:
       run: |
         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current'
         # For Professional edition use:
-         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current'
+        # $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current'
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
           Write-Output "MSBuild directory not found at $msbuildDir"
           exit 1
         }
-    
 
+    - name: path
+      run: |
+         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild'
+         if (Test-Path $msbuildDir) {
+          Get-ChildItem -Path $msbuildDir
+         } else {
+          Write-Output "MSBuild directory not found at $msbuildDir"
+          exit 1
+         }
+
+    - name: path
+      run: |
+         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Microsoft.Common.Targets'
+         if (Test-Path $msbuildDir) {
+          Get-ChildItem -Path $msbuildDir
+         } else {
+          Write-Output "MSBuild directory not found at $msbuildDir"
+          exit 1
+         }
     # Step 10: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
