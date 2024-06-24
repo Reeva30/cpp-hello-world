@@ -1,15 +1,13 @@
-name: Pull from separate repo and run build script
+name: Setup Visual Studio 2022
 
-on:
-  push:
-    branches:
-      - RunBuild
+on: [push, pull_request]
 
 jobs:
-  pull-other-repo:
+  build:
     runs-on: windows-latest
-
+    
     steps:
+
     # Step 1: Check out the main project repository
     - name: Check out the main project repository
       uses: actions/checkout@v2
@@ -25,34 +23,66 @@ jobs:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
 
-    # Step 3: Install Visual Studio 2022 Build Tools
-    - name: Install Visual Studio 2022 Build Tools
-      run: |
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait"
-      shell: cmd
-
-    - name: Verify installation
-      run: |
-          & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products * -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-          
-      
-    # Step 4: Install Rust 1.76.0
+    # Step 3: Install Rust 1.76.0
     - name: Install Rust 1.76.0
       run: |
         choco install rust --version=1.76.0 -y
       shell: cmd
 
-    # Step 5: Display the files in the main project repository
+    # Step 4: Display the files in the main project repository
     - name: List files in the main project repository
       run: dir OpenTwin
 
-    # Step 7: Set environment variables and check paths
+    # Step 5: Install Visual Studio Community Edition
+    - name: Install Visual Studio 2022 Community
+      run: |
+        choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+
+    # OR Step 5: Install Visual Studio Professional Edition
+    # Uncomment the following section to install the Professional edition instead of the Community edition
+    # - name: Install Visual Studio 2022 Professional
+    #   run: |
+    #     choco install visualstudio2022professional --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+    
+    # Step 6: Add MSBuild to PATH
+    - name: Add MSBuild to PATH
+      run: |
+        echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+        # For Professional edition use:
+        # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+    
+    # Step 7: Print PATH variable
+    - name: Print PATH variable
+      run: |
+        echo $env:Path
+    
+    # Step 8: Check directory contents
+    - name: Check directory contents
+      run: |
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
+        # For Professional edition use:
+        # $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin'
+        if (Test-Path $msbuildDir) {
+          Get-ChildItem -Path $msbuildDir
+        } else {
+          Write-Output "MSBuild directory not found at $msbuildDir"
+          exit 1
+        }
+    
+    # Step 9: Print MSBuild Version
+    - name: Print MSBuild Version
+      run: |
+        msbuild -version
+
+    # Step 10: Set environment variables and check paths
     - name: Set environment variables and check paths
       run: |
         cd OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%
-        set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
+        # For Professional edition use:
+        # set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin"
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
@@ -79,17 +109,19 @@ jobs:
         echo "All checks passed."
       shell: cmd
 
-    # Step 8: Run the BuildAll.bat script and capture log
+    # Step 11: Run the BuildAll.bat script and capture log
     - name: Run BuildAll.bat and capture log
       run: |
         cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        # For Professional edition use:
+        # set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
         echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
         type build.log
       shell: cmd
 
-    # Step 9: Upload build log artifact
+    # Step 12: Upload build log artifact
     - name: Upload build log
       uses: actions/upload-artifact@v2
       with:
