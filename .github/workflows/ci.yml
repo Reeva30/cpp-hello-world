@@ -16,6 +16,12 @@ jobs:
         ref: Ci
         path: OpenTwin
 
+    # Step 2: Check out the third-party repository
+    - name: Check out the third-party repository
+      uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/ThirdParty
+        path: ThirdParty
 
     # Step 3: Install Rust 1.76.0
     - name: Install Rust 1.76.0
@@ -42,8 +48,8 @@ jobs:
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-        # For Professional edition use:
-        # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+     # For Professional edition use:
+     # echo 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
     
     # Step 7: Print PATH variable
     - name: Print PATH variable
@@ -54,8 +60,6 @@ jobs:
     - name: Check directory contents
       run: |
         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
-        # For Professional edition use:
-        # $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin'
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
@@ -74,9 +78,9 @@ jobs:
         cd OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty"
         echo "Checking if BuildAll.bat exists..."
         if exist .\Scripts\BuildAndTest\BuildAll.bat (
           echo "BuildAll.bat exists."
@@ -104,7 +108,7 @@ jobs:
       run: |
         cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd% && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
         echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
         type build.log
       shell: cmd
