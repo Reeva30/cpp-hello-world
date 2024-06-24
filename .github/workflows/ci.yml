@@ -7,6 +7,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    # Step 1: Check out the main project repository
     - name: Check out the main project repository
       uses: actions/checkout@v2
       with:
@@ -14,30 +15,36 @@ jobs:
         ref: Ci
         path: OpenTwin
 
+    # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
-        path: OT-OpenTwin/ThirdParty
+        path: ThirdParty
+        fetch-depth: 1  # Limit fetching to the last commit
 
-
-    - name: Check and Install Rust 1.76.0
+    # Step 3: Install Rust 1.76.0
+    - name: Install Rust 1.76.0
       run: |
-        rustc --version | find "1.76.0" || choco install rust --version=1.76.0 -y
+        choco install rust --version=1.76.0 -y
       shell: cmd
 
+
+    # Step 4: Install Visual Studio 2022 Community
     - name: Install Visual Studio 2022 Community
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
-
+    
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-
+       
+    # Step 5: Print PATH variable
     - name: Print PATH variable
       run: |
         echo $env:Path
-
+    
+    # Step 6: Check directory contents
     - name: Check directory contents
       run: |
         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7' 
@@ -47,25 +54,64 @@ jobs:
           Write-Output "MSBuild directory not found at $msbuildDir"
           exit 1
         }
-
-            
+    # Step 7: Print MSBuild Version
+    - name: Print MSBuild Version
+      run: |
+        msbuild -version
+        
     # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
       run: |
         cd OT-OpenTwin
-        echo "Setting up and executing build..."
+        echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
         set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        call .\BuildAll.bat
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
+        echo "Checking directories and necessary files..."
+        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
+        dir %OPENTWIN_DEV_ROOT%
+        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
+        dir %OPENTWIN_THIRDPARTY_ROOT%
+        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
+        dir %DEVENV_ROOT_2022%
+        echo "Checking if BuildAll.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
+          echo "BuildAll.bat exists. Starting BuildAll.bat..."
+          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1 || echo "BuildAll.bat failed with exit code %ERRORLEVEL%" >> build.log
+          type build.log
+        ) else (
+          echo "BuildAll.bat does not exist."
+          exit /b 1
+        )
+        echo "Checking if RebuildAll.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
+          echo "RebuildAll.bat exists."
+        ) else (
+          echo "RebuildAll.bat does not exist."
+        )
+        echo "Checking if CheckForFailedBuilds.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
+          echo "CheckForFailedBuilds.bat exists."
+        ) else (
+          echo "CheckForFailedBuilds.bat does not exist."
+        )
+        echo "All checks passed."
       shell: cmd
-      continue-on-error: true  # Ensure subsequent steps run even if this fails
-    
+      continue-on-error: true
+
     # Step 9: Upload build log artifact
+    - name: Upload build log
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log
+        path: OpenTwin\build.log
+
     - name: Upload build log
       if: always()  # This ensures the log is uploaded whether the previous steps fail or succeed
       uses: actions/upload-artifact@v2
       with:
         name: build-log
         path: OT-OpenTwin\OpenTwin\build.log
-
