@@ -14,20 +14,13 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    - name: Cache third-party dependencies
-      uses: actions/cache@v2
-      with:
-        path: OT-OpenTwin/ThirdParty
-        key: ${{ runner.os }}-thirdparty-${{ hashFiles('**/ThirdParty/**') }}
-        restore-keys: |
-          ${{ runner.os }}-thirdparty-
-
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
         path: OT-OpenTwin/ThirdParty
         fetch-depth: 1
+        submodules: 'true'
 
     - name: Check and Install Rust 1.76.0
       run: |
@@ -63,7 +56,7 @@ jobs:
         cd OT-OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
