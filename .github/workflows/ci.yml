@@ -49,53 +49,54 @@ jobs:
           exit 1
         }
 
-        
+            
     # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
       run: |
         cd OT-OpenTwin
-        echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
-        echo "Checking directories and necessary files..."
-        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
-        dir %OPENTWIN_DEV_ROOT%
-        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
-        dir %OPENTWIN_THIRDPARTY_ROOT%
-        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-        dir %DEVENV_ROOT_2022%
-        echo "Checking if BuildAll.bat exists..."
+        echo "Current directory: %cd%" > build.log
+        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin >> build.log
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE" >> build.log
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty >> build.log
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%" >> build.log
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%" >> build.log
+        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%" >> build.log
+        echo "Checking directories and necessary files..." >> build.log
+        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%" >> build.log
+        dir %OPENTWIN_DEV_ROOT% >> build.log
+        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%" >> build.log
+        dir %OPENTWIN_THIRDPARTY_ROOT% >> build.log
+        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%" >> build.log
+        dir %DEVENV_ROOT_2022% >> build.log
+        echo "Checking if BuildAll.bat exists..." >> build.log
         if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
-          echo "BuildAll.bat exists. Starting BuildAll.bat..."
-          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1 || echo "BuildAll.bat failed with exit code %ERRORLEVEL%" >> build.log
-          type build.log
+          echo "BuildAll.bat exists. Starting BuildAll.bat..." >> build.log
+          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat >> build.log 2>&1
         ) else (
-          echo "BuildAll.bat does not exist."
+          echo "BuildAll.bat does not exist." >> build.log
           exit /b 1
         )
-        echo "Checking if RebuildAll.bat exists..."
+        echo "Checking if RebuildAll.bat exists..." >> build.log
         if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
-          echo "RebuildAll.bat exists."
+          echo "RebuildAll.bat exists." >> build.log
         ) else (
-          echo "RebuildAll.bat does not exist."
+          echo "RebuildAll.bat does not exist." >> build.log
         )
-        echo "Checking if CheckForFailedBuilds.bat exists..."
+        echo "Checking if CheckForFailedBuilds.bat exists..." >> build.log
         if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
-          echo "CheckForFailedBuilds.bat exists."
+          echo "CheckForFailedBuilds.bat exists." >> build.log
         ) else (
-          echo "CheckForFailedBuilds.bat does not exist."
+          echo "CheckForFailedBuilds.bat does not exist." >> build.log
         )
-        echo "All checks passed."
+        echo "All checks passed." >> build.log
       shell: cmd
-
-
+      continue-on-error: true  # This ensures that the next step (uploading the log) always runs
+    
     # Step 9: Upload build log artifact
     - name: Upload build log
+      if: always()  # This ensures the log is uploaded whether the previous steps fail or succeed
       uses: actions/upload-artifact@v2
       with:
         name: build-log
-        path: OpenTwin\build.log
+        path: OT-OpenTwin\build.log
+
