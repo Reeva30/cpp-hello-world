@@ -119,12 +119,7 @@ jobs:
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
         set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
         
-        REM Ensure environment variables are set correctly in the current shell
-        setlocal EnableDelayedExpansion
-        set "PATH=%PATH%;%DEVENV_ROOT_2022%"
-        endlocal & set "PATH=%PATH%"
-        
-        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        CALL "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat" BOTH BUILD 2>&1 > build.log 
         echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
         type build.log
       shell: cmd
