@@ -24,63 +24,31 @@ jobs:
         fetch-depth: 1  # Limit fetching to the last commit
 
     # Step 3: Install Rust 1.76.0
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: 1.76.0
-        profile: minimal
-        override: true
-
-    # Step 4: Cache Cargo dependencies
-    - name: Cache Cargo dependencies
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-    # Step 5: Check if Visual Studio is installed
-    - name: Check if Visual Studio is installed
-      id: vs_check
+    - name: Install Rust 1.76.0
       run: |
-        if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" (echo "::set-output name=installed::yes")
-        else (echo "::set-output name=installed::no")
+        choco install rust --version=1.76.0 -y
+      shell: cmd
 
-    # Step 6: Install Visual Studio 2022 Community
+
+    # Step 4: Install Visual Studio 2022 Community
     - name: Install Visual Studio 2022 Community
-      if: steps.vs_check.outputs.installed == 'no'
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
 
-    # Step 7: Add MSBuild to PATH
+    
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-
-    # Step 8: Print PATH variable
+       
+    # Step 5: Print PATH variable
     - name: Print PATH variable
       run: |
         echo $env:Path
-        
-
-    # Step 9: Check directory contents
+    
+    # Step 6: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin'
-        if (Test-Path $msbuildDir) {
-          Get-ChildItem -Path $msbuildDir
-        } else {
-          Write-Output "MSBuild directory not found at $msbuildDir"
-          exit 1
-        }
-    # Step 9: Check directory contents
-    - name: Check directory contents
-      run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community'
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7' 
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
@@ -88,22 +56,55 @@ jobs:
           exit 1
         }
 
-    # Step 10: Print MSBuild Version
+    # Step 7: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
         msbuild -version
-
-    # Step 11: Run the BuildAll.bat script and capture log
-    - name: Run BuildAll.bat and capture log
+        
+    # Step 8: Set environment variables, check paths, and run BuildAll.bat
+    - name: Setup and Execute Build
       run: |
-        cd OpenTwin
-        echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd% && set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
-        call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1 || echo "BuildAll.bat failed with exit code %ERRORLEVEL%" >> build.log
-        type build.log
+        cd OT-OpenTwin
+        echo "Current directory: %cd%"
+        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
+        echo "Checking directories and necessary files..."
+        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
+        dir %OPENTWIN_DEV_ROOT%
+        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
+        dir %OPENTWIN_THIRDPARTY_ROOT%
+        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
+        dir %DEVENV_ROOT_2022%
+        echo "Checking if BuildAll.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
+          echo "BuildAll.bat exists. Starting BuildAll.bat..."
+          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1 || echo "BuildAll.bat failed with exit code %ERRORLEVEL%" >> build.log
+          type build.log
+        ) else (
+          echo "BuildAll.bat does not exist."
+          exit /b 1
+        )
+        echo "Checking if RebuildAll.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
+          echo "RebuildAll.bat exists."
+        ) else (
+          echo "RebuildAll.bat does not exist."
+        )
+        echo "Checking if CheckForFailedBuilds.bat exists..."
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
+          echo "CheckForFailedBuilds.bat exists."
+        ) else (
+          echo "CheckForFailedBuilds.bat does not exist."
+        )
+        echo "All checks passed."
       shell: cmd
 
-    # Step 12: Upload build log artifact
+
+    # Step 9: Upload build log artifact
     - name: Upload build log
       uses: actions/upload-artifact@v2
       with:
