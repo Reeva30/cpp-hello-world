@@ -23,7 +23,7 @@ jobs:
 
     - name: Check and Install Rust 1.76.0
       run: |
-        rustc --version | find "1.76.0" || choco install rust --version=1.76.0 -y
+        choco install rust --version=1.76.0 -y
       shell: cmd
 
     - name: Install Visual Studio 2022 Community
