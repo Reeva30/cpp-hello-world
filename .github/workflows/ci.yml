@@ -46,7 +46,7 @@ jobs:
 
     - name: path
       run: |
-         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild'
+         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Microsoft'
          if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
          } else {
@@ -56,7 +56,7 @@ jobs:
 
     - name: path
       run: |
-         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Microsoft.Common.Targets'
+         $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Microsoft.Common.Targets'
          if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
          } else {
