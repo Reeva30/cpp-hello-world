@@ -16,6 +16,12 @@ jobs:
         ref: Ci
         path: OpenTwin
 
+    # Step 2: Check out the third-party repository
+    - name: Check out the third-party repository
+      uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/ThirdParty
+        path: ThirdParty
 
     # Step 3: Install Rust 1.76.0
     - name: Install Rust 1.76.0
@@ -77,8 +83,10 @@ jobs:
         set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin"
         # For Professional edition use:
         # set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin"
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty"
         echo "Checking if BuildAll.bat exists..."
         if exist .\Scripts\BuildAndTest\BuildAll.bat (
           echo "BuildAll.bat exists."
@@ -106,7 +114,7 @@ jobs:
       run: |
         cd OpenTwin
         echo "Starting BuildAll.bat..."
-        set OPENTWIN_DEV_ROOT=%cd% && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
+        set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
         # For Professional edition use:
         # set OPENTWIN_DEV_ROOT=%cd% &&  set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty && set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" && call .\Scripts\BuildAndTest\BuildAll.bat > build.log 2>&1
         echo "BuildAll.bat finished with exit code %ERRORLEVEL%"
