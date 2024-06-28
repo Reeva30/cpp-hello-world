@@ -40,10 +40,6 @@ jobs:
     
     
 
-    # Step 7: Print MSBuild Version
-    - name: Print MSBuild Version
-      run: |
-        msbuild -version
 
     # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
