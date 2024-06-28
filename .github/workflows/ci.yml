@@ -13,58 +13,83 @@ jobs:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
         path: OpenTwin
+      id: main-repo
+
+    - name: Set OPENTWIN_DEV_ROOT
+      run: echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}/OpenTwin" >> $GITHUB_ENV
 
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
+        fetch-depth: 1
 
+    - name: Set OPENTWIN_THIRDPARTY_ROOT
+      run: echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}/ThirdParty" >> $GITHUB_ENV
 
-    - name: Check and Install Rust 1.76.0
-      run: |
-        choco install rust --version=1.76.0 -y
+    - name: Install Rust 1.76.0
+      run: choco install rust --version=1.76.0 -y
       shell: cmd
 
     - name: Install Visual Studio 2022 Community
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
-
-    - name: Add MSBuild to PATH
-      run: |
-        echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-
-    - name: Print PATH variable
-      run: |
-        echo $env:Path
+      shell: cmd
 
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7' 
+        $vsPaths = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022' -Directory | Select-Object -ExpandProperty FullName
+        $msbuildDir = $vsPaths | Where-Object { $_ -match 'Community\\Common7\\IDE' } | Select-Object -First 1
         if (Test-Path $msbuildDir) {
-          Get-ChildItem -Path $msbuildDir
+          Write-Output "MSBuild directory found at $msbuildDir"
+          echo "DEVENV_ROOT_2022=$msbuildDir" >> $GITHUB_ENV
         } else {
-          Write-Output "MSBuild directory not found at $msbuildDir"
+          Write-Output "MSBuild directory not found"
           exit 1
         }
+      shell: pwsh
 
-            
-    # Step 8: Set environment variables, check paths, and run BuildAll.bat
+    - name: Print Environment Paths
+      run: |
+        echo "OpenTwin Development Root: $OPENTWIN_DEV_ROOT"
+        echo "OpenTwin ThirdParty Root: $OPENTWIN_THIRDPARTY_ROOT"
+        echo "Visual Studio 2022 IDE Root: $DEVENV_ROOT_2022"
+      shell: bash
+
     - name: Setup and Execute Build
       run: |
-        cd OT-OpenTwin
-        echo "Setting up and executing build..."
-        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        call .\BuildAll.bat
+        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
+          echo "Starting BuildAll.bat..."
+          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat
+        ) else (
+          echo "BuildAll.bat does not exist."
+          exit /b 1
+        )
       shell: cmd
-      continue-on-error: true  # Ensure subsequent steps run even if this fails
-    
-    # Step 9: Upload build log artifact
-    - name: Upload build log
-      if: always()  # This ensures the log is uploaded whether the previous steps fail or succeed
-      uses: actions/upload-artifact@v2
+      timeout-minutes: 30
+      continue-on-error: true
+
+    - name: Output Build Debug Log
+      if: always()
+      run: type "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\buildLog_Debug.txt"
+      shell: cmd
+
+    - name: Output Build Release Log
+      if: always()
+      run: type "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\buildLog_Release.txt"
+      shell: cmd
+
+    - name: Upload Build Log Files
+      if: always()
+      uses: actions/upload-artifact@v3
       with:
-        name: build-log
-        path: OT-OpenTwin\OpenTwin\build.log
+        name: build-logs
+        path: |
+          ${{ env.OPENTWIN_DEV_ROOT }}/Scripts/BuildAndTest/buildLog_Debug.txt
+          ${{ env.OPENTWIN_DEV_ROOT }}/Scripts/BuildAndTest/buildLog_Release.txt
+          
+    - name: List Build Script Directory
+      if: always()
+      run: dir "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest"
+      shell: cmd
