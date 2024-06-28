@@ -13,7 +13,13 @@ jobs:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
         path: OpenTwin
-      id: main-repo
+
+    - name: Check out the third-party repository
+      uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/ThirdParty
+        path: ThirdParty
+        fetch-depth: 1
 
 
     - name: Install Visual Studio 2022 Community
@@ -21,9 +27,14 @@ jobs:
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
       shell: cmd
 
+
+    - name: Install Rust 1.76.0
+      run: choco install rust --version=1.76.0 -y
+      shell: cmd
+      
+
     - name: Set DEVENV_ROOT_2022
       run: |
-        Start-Sleep -Seconds 30  # Adds a delay to ensure installation completes
         $pathsToCheck = @(
           'C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE',
           'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE'
@@ -44,20 +55,6 @@ jobs:
           exit 1
         }
       shell: pwsh
-
-    - name: Check out the third-party repository
-      uses: actions/checkout@v2
-      with:
-        repository: OT-OpenTwin/ThirdParty
-        path: ThirdParty
-        fetch-depth: 1
-
-
-    - name: Install Rust 1.76.0
-      run: choco install rust --version=1.76.0 -y
-      shell: cmd
-      
-
 
     - name: Setup and Execute Build
       run: |
