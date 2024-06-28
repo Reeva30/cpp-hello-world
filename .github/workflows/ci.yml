@@ -47,7 +47,7 @@ jobs:
     # Step 6: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7' 
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE' 
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
