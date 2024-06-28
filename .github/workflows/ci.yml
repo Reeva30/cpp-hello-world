@@ -25,21 +25,20 @@ jobs:
     
     - name: Set up Visual Studio Path
       run: |
-          if [ -d "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE" ]; then
-            echo "DEVENV_ROOT_2022=C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE" >> $GITHUB_ENV
-          else
-            echo "Visual Studio path not found."
-            exit 1
-          fi
+        if [ -d "C:/Program\ Files/Microsoft\ Visual\ Studio/2022/Community/Common7/IDE" ]; then
+          echo "DEVENV_ROOT_2022=C:/Program\ Files/Microsoft\ Visual\ Studio/2022/Community/Common7/IDE" >> $GITHUB_ENV
+        else
+          echo "Visual Studio path not found."
+          exit 1
+        fi
       shell: bash
-      
-
+    
     - name: Verify DEVENV_ROOT_2022
       run: |
         echo "DEVENV_ROOT_2022: ${{ env.DEVENV_ROOT_2022 }}"
       shell: bash
-
-
+    
+    
 
     # Step 7: Print MSBuild Version
     - name: Print MSBuild Version
