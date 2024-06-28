@@ -17,7 +17,8 @@ jobs:
 
     - name: Set OPENTWIN_DEV_ROOT
       run: |
-        set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
+        echo "Setting OPENTWIN_DEV_ROOT"
+        setx OPENTWIN_DEV_ROOT "${{ github.workspace }}\OpenTwin"
         echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
       shell: cmd
 
@@ -59,7 +60,8 @@ jobs:
 
     - name: Set OPENTWIN_THIRDPARTY_ROOT
       run: |
-        set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
+        echo "Setting OPENTWIN_THIRDPARTY_ROOT"
+        setx OPENTWIN_THIRDPARTY_ROOT "${{ github.workspace }}\ThirdParty"
         echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
       shell: cmd
 
@@ -76,6 +78,9 @@ jobs:
 
     - name: Setup and Execute Build
       run: |
+        echo "Using OPENTWIN_DEV_ROOT: %OPENTWIN_DEV_ROOT%"
+        echo "Using DEVENV_ROOT_2022: %DEVENV_ROOT_2022%"
+        echo "Using OPENTWIN_THIRDPARTY_ROOT: %OPENTWIN_THIRDPARTY_ROOT%"
         if exist "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat" (
           echo "Starting BuildAll.bat..."
           call "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat"
