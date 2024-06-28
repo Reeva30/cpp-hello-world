@@ -16,8 +16,10 @@ jobs:
       id: main-repo
 
     - name: Set OPENTWIN_DEV_ROOT
-      run: echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}/OpenTwin" >> $GITHUB_ENV
-
+      run: |
+        set OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin
+        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
+      shell: cmd
 
     - name: Install Visual Studio 2022 Community
       run: |
@@ -40,7 +42,8 @@ jobs:
         }
         if ($null -ne $foundPath) {
           Write-Output "Visual Studio 2022 IDE directory found at $foundPath"
-          echo "DEVENV_ROOT_2022=$foundPath" >> $GITHUB_ENV
+          echo "DEVENV_ROOT_2022=$foundPath" >> $env:GITHUB_ENV
+          [Environment]::SetEnvironmentVariable("DEVENV_ROOT_2022", $foundPath, "Process")
         } else {
           Write-Output "Visual Studio 2022 IDE directory not found in expected locations"
           exit 1
@@ -55,7 +58,10 @@ jobs:
         fetch-depth: 1
 
     - name: Set OPENTWIN_THIRDPARTY_ROOT
-      run: echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}/ThirdParty" >> $GITHUB_ENV
+      run: |
+        set OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty
+        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
+      shell: cmd
 
     - name: Install Rust 1.76.0
       run: choco install rust --version=1.76.0 -y
@@ -63,16 +69,16 @@ jobs:
       
     - name: Print Environment Paths
       run: |
-        echo "OpenTwin Development Root: $OPENTWIN_DEV_ROOT"
-        echo "OpenTwin ThirdParty Root: $OPENTWIN_THIRDPARTY_ROOT"
-        echo "Visual Studio 2022 IDE Root: $DEVENV_ROOT_2022"
-      shell: bash
+        echo "OpenTwin Development Root: %OPENTWIN_DEV_ROOT%"
+        echo "OpenTwin ThirdParty Root: %OPENTWIN_THIRDPARTY_ROOT%"
+        echo "Visual Studio 2022 IDE Root: %DEVENV_ROOT_2022%"
+      shell: cmd
 
     - name: Setup and Execute Build
       run: |
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
+        if exist "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat" (
           echo "Starting BuildAll.bat..."
-          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat
+          call "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat"
         ) else (
           echo "BuildAll.bat does not exist."
           exit /b 1
