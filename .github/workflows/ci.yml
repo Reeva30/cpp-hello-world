@@ -49,6 +49,8 @@ jobs:
           Write-Output "Visual Studio 2022 IDE directory not found in expected locations"
           exit 1
         }
+        dir %DEVENV_ROOT_2022%
+
       shell: pwsh
 
     - name: Setup and Execute Build
