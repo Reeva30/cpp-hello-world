@@ -18,6 +18,24 @@ jobs:
     - name: Set OPENTWIN_DEV_ROOT
       run: echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}/OpenTwin" >> $GITHUB_ENV
 
+
+    - name: Install Visual Studio 2022 Community
+      run: |
+        choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+      shell: cmd
+
+    - name: Set DEVENV_ROOT_2022
+      run: |
+        $vsInstallPath = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE' -Directory | Select-Object -ExpandProperty FullName
+        if (Test-Path $vsInstallPath) {
+          Write-Output "Visual Studio 2022 IDE directory found at $vsInstallPath"
+          echo "DEVENV_ROOT_2022=$vsInstallPath" >> $GITHUB_ENV
+        } else {
+          Write-Output "Visual Studio 2022 IDE directory not found"
+          exit 1
+        }
+      shell: pwsh
+
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
@@ -31,25 +49,7 @@ jobs:
     - name: Install Rust 1.76.0
       run: choco install rust --version=1.76.0 -y
       shell: cmd
-
-    - name: Install Visual Studio 2022 Community
-      run: |
-        choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
-      shell: cmd
-
-    - name: Check directory contents
-      run: |
-        $vsPaths = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022' -Directory | Select-Object -ExpandProperty FullName
-        $msbuildDir = $vsPaths | Where-Object { $_ -match 'Community\\Common7\\IDE' } | Select-Object -First 1
-        if (Test-Path $msbuildDir) {
-          Write-Output "MSBuild directory found at $msbuildDir"
-          echo "DEVENV_ROOT_2022=$msbuildDir" >> $GITHUB_ENV
-        } else {
-          Write-Output "MSBuild directory not found"
-          exit 1
-        }
-      shell: pwsh
-
+      
     - name: Print Environment Paths
       run: |
         echo "OpenTwin Development Root: $OPENTWIN_DEV_ROOT"
