@@ -22,11 +22,11 @@ jobs:
     - name: Install Visual Studio 2022 Community
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
-    
+
     - name: Set up Visual Studio Path
       run: |
-        if [ -d C:/Program\\ Files/Microsoft\\ Visual\\ Studio/2022/Community/Common7/IDE ]; then
-          echo DEVENV_ROOT_2022=C:/Program\\ Files/Microsoft\\ Visual\\ Studio/2022/Community/Common7/IDE >> $GITHUB_ENV
+        if [ -d "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE" ]; then
+          echo "DEVENV_ROOT_2022=C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE" >> $GITHUB_ENV
         else
           echo "Visual Studio path not found."
           exit 1
@@ -37,6 +37,7 @@ jobs:
       run: |
         echo "DEVENV_ROOT_2022: ${{ env.DEVENV_ROOT_2022 }}"
       shell: bash
+
 
     
     
