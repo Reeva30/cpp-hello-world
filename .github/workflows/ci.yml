@@ -26,12 +26,23 @@ jobs:
 
     - name: Set DEVENV_ROOT_2022
       run: |
-        $vsInstallPath = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE' -Directory | Select-Object -ExpandProperty FullName
-        if (Test-Path $vsInstallPath) {
-          Write-Output "Visual Studio 2022 IDE directory found at $vsInstallPath"
-          echo "DEVENV_ROOT_2022=$vsInstallPath" >> $GITHUB_ENV
+        Start-Sleep -Seconds 30  # Adds a delay to ensure installation completes
+        $pathsToCheck = @(
+          'C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE',
+          'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE'
+        )
+        $foundPath = $null
+        foreach ($path in $pathsToCheck) {
+          if (Test-Path $path) {
+            $foundPath = $path
+            break
+          }
+        }
+        if ($null -ne $foundPath) {
+          Write-Output "Visual Studio 2022 IDE directory found at $foundPath"
+          echo "DEVENV_ROOT_2022=$foundPath" >> $GITHUB_ENV
         } else {
-          Write-Output "Visual Studio 2022 IDE directory not found"
+          Write-Output "Visual Studio 2022 IDE directory not found in expected locations"
           exit 1
         }
       shell: pwsh
