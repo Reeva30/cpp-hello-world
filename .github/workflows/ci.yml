@@ -119,7 +119,9 @@ jobs:
         path: |
           ${{ env.OPENTWIN_DEV_ROOT }}\Scripts\BuildAndTest\buildLog_Debug.txt
           ${{ env.OPENTWIN_DEV_ROOT }}\Scripts\BuildAndTest\buildLog_Release.txt
+          
     - name: List Build Script Directory
+      if: always()  # Ensures this step runs even if previous steps fail
       run: dir "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest"
       shell: cmd
 
