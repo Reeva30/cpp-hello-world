@@ -13,7 +13,13 @@ jobs:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
         path: OpenTwin
-
+ # Step 2: Check out the third-party repository
+    - name: Check out the third-party repository
+      uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/ThirdParty
+        path: ThirdParty
+        fetch-depth: 1  # Limit fetching to the last commit
 
 
 
@@ -27,7 +33,6 @@ jobs:
       run: choco install rust --version=1.76.0 -y
       shell: cmd
       
-
     - name: Set DEVENV_ROOT_2022
       run: |
         $pathsToCheck = @(
@@ -61,9 +66,7 @@ jobs:
         set "DEVENV_ROOT_2022= C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir %DEVENV_ROOT_2022%
-        set "DEVENV_ROOT_2022= C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE"
-        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-        dir %DEVENV_ROOT_2022%
+
 
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
