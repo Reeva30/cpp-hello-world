@@ -99,18 +99,27 @@ jobs:
         )
         echo "All checks passed."
       shell: cmd
+      timeout-minutes: 30
       continue-on-error: true
 
-    # Step 9: Upload build log artifact
-    - name: Upload build log
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-log
-        path: OpenTwin\build.log
+    - name: Output Build Debug Log
+      if: always()  # Ensures this step runs even if previous steps fail
+      run: type "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\buildLog_Debug.txt"
+      shell: cmd
 
-    - name: Upload build log
-      if: always()  # This ensures the log is uploaded whether the previous steps fail or succeed
-      uses: actions/upload-artifact@v2
+    - name: Output Build Release Log
+      if: always()  # Ensures this step runs even if previous steps fail
+      run: type "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\buildLog_Release.txt"
+      shell: cmd
+    - name: Upload Build Log Files
+      if: always()  # Ensures this step runs even if previous steps fail
+      uses: actions/upload-artifact@v3
       with:
-        name: build-log
-        path: OT-OpenTwin\OpenTwin\build.log
+        name: build-logs
+        path: |
+          ${{ env.OPENTWIN_DEV_ROOT }}\Scripts\BuildAndTest\buildLog_Debug.txt
+          ${{ env.OPENTWIN_DEV_ROOT }}\Scripts\BuildAndTest\buildLog_Release.txt
+    - name: List Build Script Directory
+      run: dir "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest"
+      shell: cmd
+
