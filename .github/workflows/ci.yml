@@ -47,13 +47,16 @@ jobs:
     # Step 6: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE' 
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE'
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
+          [Environment]::SetEnvironmentVariable('DEVENV_ROOT_2022', $msbuildDir, 'Process')
         } else {
           Write-Output "MSBuild directory not found at $msbuildDir"
           exit 1
         }
+      shell: pwsh
+
     # Step 7: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
