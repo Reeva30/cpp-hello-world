@@ -15,12 +15,6 @@ jobs:
         path: OpenTwin
       id: main-repo
 
-    - name: Set OPENTWIN_DEV_ROOT
-      run: |
-        echo "Setting OPENTWIN_DEV_ROOT"
-        setx OPENTWIN_DEV_ROOT "${{ github.workspace }}\OpenTwin"
-        echo "OPENTWIN_DEV_ROOT=${{ github.workspace }}\OpenTwin" >> $GITHUB_ENV
-      shell: cmd
 
     - name: Install Visual Studio 2022 Community
       run: |
@@ -58,29 +52,29 @@ jobs:
         path: ThirdParty
         fetch-depth: 1
 
-    - name: Set OPENTWIN_THIRDPARTY_ROOT
-      run: |
-        echo "Setting OPENTWIN_THIRDPARTY_ROOT"
-        setx OPENTWIN_THIRDPARTY_ROOT "${{ github.workspace }}\ThirdParty"
-        echo "OPENTWIN_THIRDPARTY_ROOT=${{ github.workspace }}\ThirdParty" >> $GITHUB_ENV
-      shell: cmd
 
     - name: Install Rust 1.76.0
       run: choco install rust --version=1.76.0 -y
       shell: cmd
       
-    - name: Print Environment Paths
-      run: |
-        echo "OpenTwin Development Root: %OPENTWIN_DEV_ROOT%"
-        echo "OpenTwin ThirdParty Root: %OPENTWIN_THIRDPARTY_ROOT%"
-        echo "Visual Studio 2022 IDE Root: %DEVENV_ROOT_2022%"
-      shell: cmd
+
 
     - name: Setup and Execute Build
       run: |
-        echo "Using OPENTWIN_DEV_ROOT: %OPENTWIN_DEV_ROOT%"
-        echo "Using DEVENV_ROOT_2022: %DEVENV_ROOT_2022%"
-        echo "Using OPENTWIN_THIRDPARTY_ROOT: %OPENTWIN_THIRDPARTY_ROOT%"
+        cd OT-OpenTwin
+        echo "Current directory: %cd%"
+        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
+        echo "Checking directories and necessary files..."
+        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
+        dir %OPENTWIN_DEV_ROOT%
+        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
+        dir %OPENTWIN_THIRDPARTY_ROOT%
+        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
+        dir %DEVENV_ROOT_2022%
         if exist "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat" (
           echo "Starting BuildAll.bat..."
           call "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat"
