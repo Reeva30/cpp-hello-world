@@ -15,19 +15,7 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    # Step 2: Check out the third-party repository
-    - name: Check out the third-party repository
-      uses: actions/checkout@v2
-      with:
-        repository: OT-OpenTwin/ThirdParty
-        path: ThirdParty
-        fetch-depth: 1  # Limit fetching to the last commit
 
-    # Step 3: Install Rust 1.76.0
-    - name: Install Rust 1.76.0
-      run: |
-        choco install rust --version=1.76.0 -y
-      shell: cmd
 
 
     # Step 4: Install Visual Studio 2022 Community
@@ -57,11 +45,33 @@ jobs:
         }
       shell: pwsh
 
+
+    - name: Verify DEVENV_ROOT_2022
+      run: |
+        echo "DEVENV_ROOT_2022: ${{ env.DEVENV_ROOT_2022 }}"
+      shell: bash
+
+
     # Step 7: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
         msbuild -version
-        
+
+    # Step 2: Check out the third-party repository
+    - name: Check out the third-party repository
+      uses: actions/checkout@v2
+      with:
+        repository: OT-OpenTwin/ThirdParty
+        path: ThirdParty
+        fetch-depth: 1  # Limit fetching to the last commit
+
+    # Step 3: Install Rust 1.76.0
+    - name: Install Rust 1.76.0
+      run: |
+        choco install rust --version=1.76.0 -y
+      shell: cmd
+
+    
     # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
       run: |
