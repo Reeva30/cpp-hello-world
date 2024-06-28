@@ -32,20 +32,21 @@ jobs:
       run: |
         echo $env:Path
     
-    # Step 6: Check directory contents
-    - name: Check directory contents
+    - name: Check Visual Studio Path
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE'
-        if (Test-Path $msbuildDir) {
-          Get-ChildItem -Path $msbuildDir
-          [Environment]::SetEnvironmentVariable('DEVENV_ROOT_2022', $msbuildDir, 'Process')
-        } else {
-          Write-Output "MSBuild directory not found at $msbuildDir"
-          exit 1
-        }
-      shell: pwsh
+          if [ -d "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE" ]; then
+            echo "Path exists."
+          else
+            echo "Path does not exist."
+            exit 1
+          fi
+      shell: bash
 
-
+    - name: Set DEVENV_ROOT_2022
+      run: |
+          echo "DEVENV_ROOT_2022=C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE" >> $GITHUB_ENV
+      shell: bash
+    
     - name: Verify DEVENV_ROOT_2022
       run: |
         echo "DEVENV_ROOT_2022: ${{ env.DEVENV_ROOT_2022 }}"
