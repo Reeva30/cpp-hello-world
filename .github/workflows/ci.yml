@@ -32,7 +32,7 @@ jobs:
     # Step 4: Install Visual Studio 2022 Community
     - name: Install Visual Studio 2022 Community
       run: |
-        choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+        choco install visualstudio2022community --package-parameters "--installPath C:\VS2022 --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
     
     - name: Add MSBuild to PATH
       run: |
@@ -46,7 +46,7 @@ jobs:
     # Step 6: Check directory contents
     - name: Check directory contents
       run: |
-        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7' 
+        $msbuildDir = 'C:\VS2022\Common7\IDE' 
         if (Test-Path $msbuildDir) {
           Get-ChildItem -Path $msbuildDir
         } else {
@@ -66,7 +66,7 @@ jobs:
         cd OT-OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE
+        set DEVENV_ROOT_2022=C:\VS2022\Common7\IDE
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
