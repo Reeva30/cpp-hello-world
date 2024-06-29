@@ -29,7 +29,6 @@ jobs:
         choco install rust --version=1.76.0 -y
       shell: cmd
 
-
     # Step 4: Install Visual Studio 2022 Community
     - name: Install Visual Studio 2022 Community
       run: |
@@ -38,12 +37,12 @@ jobs:
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-       
+
     # Step 5: Print PATH variable
     - name: Print PATH variable
       run: |
         echo $env:Path
-    
+
     # Step 6: Check directory contents
     - name: Check directory contents
       run: |
@@ -54,18 +53,20 @@ jobs:
           Write-Output "MSBuild directory not found at $msbuildDir"
           exit 1
         }
+      shell: pwsh
+
     # Step 7: Print MSBuild Version
     - name: Print MSBuild Version
       run: |
         msbuild -version
-        
+
     # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
       run: |
         cd OT-OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
+        set DEVENV_ROOT_2022=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
@@ -76,7 +77,7 @@ jobs:
         echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
         dir %OPENTWIN_THIRDPARTY_ROOT%
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-        dir %DEVENV_ROOT_2022%
+        dir "%DEVENV_ROOT_2022%"
         echo "Checking if BuildAll.bat exists..."
         if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
           echo "BuildAll.bat exists. Starting BuildAll.bat..."
