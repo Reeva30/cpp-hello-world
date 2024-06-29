@@ -55,10 +55,7 @@ jobs:
         }
       shell: pwsh
 
-    # Step 7: Print MSBuild Version
-    - name: Print MSBuild Version
-      run: |
-        msbuild -version
+
 
     # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
