@@ -7,6 +7,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    # Step 1: Check out the main project repository
     - name: Check out the main project repository
       uses: actions/checkout@v2
       with:
@@ -14,6 +15,7 @@ jobs:
         ref: Ci
         path: OpenTwin
 
+    # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
       uses: actions/checkout@v2
       with:
@@ -21,42 +23,49 @@ jobs:
         path: ThirdParty
         fetch-depth: 1  # Limit fetching to the last commit
 
+    # Step 3: Install Rust 1.76.0
     - name: Install Rust 1.76.0
-      run: choco install rust --version=1.76.0 -y
+      run: |
+        choco install rust --version=1.76.0 -y
       shell: cmd
 
+
+    # Step 4: Install Visual Studio 2022 Community
     - name: Install Visual Studio 2022 Community
       run: |
         choco install visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
-      shell: cmd
-
+    
+    - name: Add MSBuild to PATH
+      run: |
+        echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+       
+    # Step 5: Print PATH variable
+    - name: Print PATH variable
+      run: |
+        echo $env:Path
+    
+    # Step 6: Check directory contents
     - name: Check directory contents
       run: |
-        $vsPaths = Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio\2022' -Directory | Select-Object -ExpandProperty FullName
-        $msbuildDir = $vsPaths | Where-Object { $_ -match 'Community\\Common7\\IDE' } | Select-Object -First 1
+        $msbuildDir = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7' 
         if (Test-Path $msbuildDir) {
-          Write-Output "MSBuild directory found at $msbuildDir"
-          echo "DEVENV_ROOT_2022=$msbuildDir" | Out-File -Append -FilePath $env:GITHUB_ENV
+          Get-ChildItem -Path $msbuildDir
         } else {
-          Write-Output "MSBuild directory not found"
+          Write-Output "MSBuild directory not found at $msbuildDir"
           exit 1
         }
-      shell: pwsh
-
+    # Step 7: Print MSBuild Version
     - name: Print MSBuild Version
-      run: msbuild -version
-      shell: cmd
-
+      run: |
+        msbuild -version
+        
+    # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
       run: |
         cd OT-OpenTwin
         echo "Current directory: %cd%"
-        echo "Checking Visual Studio 2022 directory..."
-        if not exist "%DEVENV_ROOT_2022%\devenv.exe" (
-          echo "ERROR: Visual Studio 2022 IDE not found at %DEVENV_ROOT_2022%"
-          exit 1
-        )
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
+        set DEVENV_ROOT_2022="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
@@ -90,29 +99,4 @@ jobs:
         )
         echo "All checks passed."
       shell: cmd
-      timeout-minutes: 30
       continue-on-error: true
-
-    - name: Output Build Debug Log
-      if: always()
-      run: type "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\buildLog_Debug.txt"
-      shell: cmd
-
-    - name: Output Build Release Log
-      if: always()
-      run: type "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\buildLog_Release.txt"
-      shell: cmd
-
-    - name: Upload Build Log Files
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-logs
-        path: |
-          ${{ env.OPENTWIN_DEV_ROOT }}\Scripts\BuildAndTest\buildLog_Debug.txt
-          ${{ env.OPENTWIN_DEV_ROOT }}\Scripts\BuildAndTest\buildLog_Release.txt
-          
-    - name: List Build Script Directory
-      if: always()
-      run: dir "%OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest"
-      shell: cmd
