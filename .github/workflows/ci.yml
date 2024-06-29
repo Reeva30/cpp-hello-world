@@ -54,6 +54,7 @@ jobs:
           exit 1
         }
       shell: pwsh
+      
 
     # Step 7: Set environment variables and run BuildAll.bat
     - name: Setup and Execute Build
