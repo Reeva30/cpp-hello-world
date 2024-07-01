@@ -33,17 +33,20 @@ jobs:
     - name: Install Visual Studio 2022 Community
       run: |
         choco install visualstudio2022community --package-parameters "--installPath C:\VS2022 --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+      shell: cmd
     
+    # Step 5: Add MSBuild to PATH
     - name: Add MSBuild to PATH
       run: |
         echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
+      shell: pwsh
 
-    # Step 5: Print PATH variable
+    # Step 6: Print PATH variable
     - name: Print PATH variable
-      run: |
-        echo $env:Path
+      run: echo $env:Path
+      shell: pwsh
 
-    # Step 6: Check directory contents
+    # Step 7: Check directory contents
     - name: Check directory contents
       run: |
         $msbuildDir = 'C:\VS2022\Common7\IDE' 
@@ -54,12 +57,11 @@ jobs:
           exit 1
         }
       shell: pwsh
-      
 
-    # Step 7: Set environment variables and run BuildAll.bat
+    # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
       run: |
-        cd ${{ github.workspace }}
+        cd OpenTwin
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
         set DEVENV_ROOT_2022=C:\VS2022\Common7\IDE
@@ -97,20 +99,3 @@ jobs:
         echo "All checks passed."
       shell: cmd
       continue-on-error: true
-
-
-
-    - name: Upload Debug Build Log
-      if: failure()
-      uses: actions/upload-artifact@v2
-      with:
-        name: buildLog_Debug
-        path: buildLog_Debug.txt
-
-    - name: Upload Release Build Log
-      if: failure()
-      uses: actions/upload-artifact@v2
-      with:
-        name: buildLog_Release
-        path: buildLog_Release.txt
-
