@@ -41,6 +41,7 @@ jobs:
       run: |
         choco install rust --version=1.76.0 -y
       shell: cmd
+
    
     - name: Add Visual Studio to PATH
       uses: microsoft/setup-msbuild@v1.0.2
