@@ -88,3 +88,11 @@ jobs:
           echo "CheckForFailedBuilds.bat does not exist."
         )
         echo "All checks passed."
+
+
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-summary
+        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Summary.txt
