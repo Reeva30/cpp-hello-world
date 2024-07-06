@@ -77,7 +77,7 @@ jobs:
         if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
           echo "RebuildAll.bat exists."
         ) else (
-          echo "RebuildAll.bat does not exist."
+          echo "RebuildAll.bat does not  exist."
         )
         echo "Checking if CheckForFailedBuilds.bat exists..."
         if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
