@@ -9,7 +9,7 @@ on:
 env:
   DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
   DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
-
+  QT_PATH: ${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64
 
 permissions:
   contents: read
