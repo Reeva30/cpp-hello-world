@@ -91,25 +91,8 @@ jobs:
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir "%DEVENV_ROOT_2022%"
         echo "Checking if BuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
-          echo "BuildAll.bat exists. Starting BuildAll.bat..."
-          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
-        ) else (
-          echo "BuildAll.bat does not exist."
-          exit /b 1
-        )
-        echo "Checking if RebuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
-          echo "RebuildAll.bat exists."
-        ) else (
-          echo "RebuildAll.bat does not  exist."
-        )
-        echo "Checking if CheckForFailedBuilds.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
-          echo "CheckForFailedBuilds.bat exists."
-        ) else (
-          echo "CheckForFailedBuilds.bat does not exist."
-        )
+        echo "Starting BuildAll.bat..."
+        call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
         echo "All checks passed."
 
 
