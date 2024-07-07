@@ -50,6 +50,20 @@ jobs:
       run: dir /s
       shell: cmd
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14' # specify the version you need
+
+    - name: Install Yarn
+      run: npm install -g yarn
+
+    - name: Install dependencies
+      run: yarn install
+
+    - name: Run build
+      run: yarn build
+
     - name: Setup and Execute Build
       shell: cmd
       run: |
