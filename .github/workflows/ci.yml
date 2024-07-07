@@ -61,8 +61,6 @@ jobs:
     - name: Install dependencies
       run: yarn install
 
-    - name: Run build
-      run: yarn build
 
     - name: Setup and Execute Build
       shell: cmd
