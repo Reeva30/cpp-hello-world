@@ -26,14 +26,10 @@ jobs:
         path: OpenTwin
 
 
-    - name: Install Rust 1.76.0
-      run: choco install rust --version=1.76.0 -y
-      shell: cmd
-
     - name: Add Visual Studio to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Download and Install Qt VS Add-in
+    - name: Download Qt VS Add-in
       run: |
         $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
         $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
@@ -43,7 +39,11 @@ jobs:
         if ($fileHash.Hash -ne $expectedHash) {
           throw "Hash mismatch: $($fileHash.Hash)"
         }
-        Start-Process -Wait -FilePath "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\VSIXInstaller.exe" -ArgumentList "/q", $output
+      shell: powershell
+
+    - name: Install Qt VS Add-in using Visual Studio CLI
+      run: |
+        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\VisualStudio\VsixInstaller.exe" qt-vsaddin-msvc2022-3.0.2.vsix /quiet /logFile:vsix_installer.log
       shell: powershell
 
     - name: Verify Qt VS Add-in Installation
