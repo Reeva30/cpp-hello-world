@@ -36,35 +36,34 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
-    - name: Set Up Qt Environment
+    - name: Set QTDIR and QtToolsPath
+      shell: bash
       run: |
-        $qtPath = "${{ github.workspace }}\\Qt\\6.6.1\\msvc2019_64"
-        echo "QTDIR=$qtPath" >> $GITHUB_ENV
-        echo "QT_PLUGIN_PATH=$qtPath\\plugins" >> $GITHUB_ENV
-        echo "$qtPath\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      shell: powershell
+        echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+        echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
 
     - name: Verify Qt Setup
+      shell: bash
       run: |
         echo "Verifying Qt setup..."
-        if (-Not $env:QTDIR) {
-          Write-Error "QTDIR is not set."
+        if [ -z "$QTDIR" ]; then
+          echo "QTDIR is not set."
           exit 1
-        }
-        if (-Not (Get-Command qmake -ErrorAction SilentlyContinue)) {
-          Write-Error "qmake is not found in PATH."
+        fi
+        if ! command -v qmake &> /dev/null; then
+          echo "qmake could not be found"
           exit 1
-        }
-        if (-Not (Get-Command moc -ErrorAction SilentlyContinue)) {
-          Write-Error "moc is not found in PATH."
+        fi
+        if ! command -v moc &> /dev/null; then
+          echo "moc could not be found"
           exit 1
-        }
-        if (-Not (Get-Command uic -ErrorAction SilentlyContinue)) {
-          Write-Error "uic is not found in PATH."
+        fi
+        if ! command -v uic &> /dev/null; then
+          echo "uic could not be found"
           exit 1
-        }
+        fi
         echo "Qt setup verified successfully."
-      shell: powershell
+
 
     - name: Setup and Execute Build
       run: |
