@@ -30,40 +30,66 @@ jobs:
           repository: OT-OpenTwin/ThirdParty
           path: ThirdParty
 
+
       - name: Add Visual Studio to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Set QTDIR and QtToolsPath
-        shell: bash
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.6.1'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtcharts qtwebengine'
+          archives: 'qtbase qtsvg'
+          cache: 'false'
+          setup-python: 'true'
+          tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
+          set-env: 'true'
+          tools-only: 'false'
+          aqtversion: '==3.1.*'
+          py7zrversion: '==0.20.*'
+          extra: '--external 7z'
+
+      - name: Set Environment Variables for Qt and MSBuild
+        shell: pwsh
         run: |
-          export QTDIR=$GITHUB_WORKSPACE/ThirdParty/Qt/6.6.1/msvc2019_64
-          export QtToolsPath=$QTDIR/bin
-          echo "QTDIR=$QTDIR" >> "$GITHUB_ENV"
-          echo "QtToolsPath=$QtToolsPath" >> "$GITHUB_ENV"
-          echo "Path=$QtToolsPath:$PATH" >> "$GITHUB_ENV"
+          $qtPath = "${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64"
+          $qtMsBuildPath = "${{ github.workspace }}\ThirdParty\QtMsBuild"
+          [System.Environment]::SetEnvironmentVariable('QT_PATH', $qtPath, [System.EnvironmentVariableTarget]::Process)
+          [System.Environment]::SetEnvironmentVariable('QtToolsPath', "$qtPath\bin", [System.EnvironmentVariableTarget]::Process)
+          [System.Environment]::SetEnvironmentVariable('QtMsBuild', $qtMsBuildPath, [System.EnvironmentVariableTarget]::Process)
+          [System.Environment]::SetEnvironmentVariable('PATH', "$qtPath\bin;$qtMsBuildPath;$Env:PATH", [System.EnvironmentVariableTarget]::Process)
+          Write-Host "QT_PATH=$qtPath"
+          Write-Host "QtToolsPath=$qtPath\bin"
+          Write-Host "QtMsBuild=$qtMsBuildPath"
+          Write-Host "PATH=$qtPath\bin;$qtMsBuildPath;$Env:PATH"
 
       - name: Verify Qt Setup
-        shell: bash
+        shell: pwsh
         run: |
-          echo "Verifying Qt setup..."
-          if [ -z "$QTDIR" ]; then
-            echo "QTDIR is not set."
+          Write-Host "Verifying Qt setup..."
+          if (-Not $Env:QT_PATH) {
+            Write-Host "QT_PATH is not set."
             exit 1
-          fi
-          if ! command -v $QtToolsPath/qmake &> /dev/null; then
-            echo "qmake could not be found"
+          }
+          if (-Not (Get-Command qmake -ErrorAction SilentlyContinue)) {
+            Write-Host "qmake could not be found"
             exit 1
-          fi
-          if ! command -v $QtToolsPath/moc &> /dev/null; then
-            echo "moc could not be found"
+          }
+          if (-Not (Get-Command moc -ErrorAction SilentlyContinue)) {
+            Write-Host "moc could not be found"
             exit 1
-          fi
-          if ! command -v $QtToolsPath/uic &> /dev/null; then
-            echo "uic could not be found"
+          }
+          if (-Not (Get-Command uic -ErrorAction SilentlyContinue)) {
+            Write-Host "uic could not be found"
             exit 1
-          fi
-          echo "Qt setup verified successfully."
+          }
+          Write-Host "Qt setup verified successfully."
 
+
+     
       - name: Setup and Execute Build
         shell: cmd
         run: |
