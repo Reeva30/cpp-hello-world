@@ -16,13 +16,23 @@ jobs:
     - name: Check out the repository
       uses: actions/checkout@v4
 
-    - name: Install Chocolatey
+    - name: Download and Extract Qt VS Add-in
       run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
+        $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
+        Invoke-WebRequest -Uri $url -OutFile $output
+        $expectedHash = "b1eba080495505638e2431e85ffa4108ee3b688595cc4657f1b80e30712c2f23"
+        $fileHash = Get-FileHash -Path $output -Algorithm SHA256
+        if ($fileHash.Hash -ne $expectedHash) {
+          throw "Hash mismatch: $($fileHash.Hash)"
+        }
+        Expand-Archive -Path $output -DestinationPath "qt-vsaddin"
 
-    - name: Install Qt VS Add-in using Chocolatey
+    - name: Copy Qt VS Add-in to Extensions Directory
       run: |
-        choco install qt-vsaddin --version=3.0.2 -y
+        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
+        $qtVsToolsPath = Join-Path $extensionsPath "Trolltech\\QtVisualStudioTools"
+        Copy-Item -Path "qt-vsaddin\\*" -Destination $qtVsToolsPath -Recurse
 
     - name: Verify Qt VS Add-in Installation
       run: |
