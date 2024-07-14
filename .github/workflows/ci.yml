@@ -65,7 +65,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install sphinx sphinx-rtd-theme
 
-    - name: Download Qt VS Add-in
+
+    - name: Download and Extract Qt VS Add-in
       run: |
         $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
         $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
@@ -75,12 +76,16 @@ jobs:
         if ($fileHash.Hash -ne $expectedHash) {
           throw "Hash mismatch: $($fileHash.Hash)"
         }
-
-    - name: Install Qt VS Add-in
+        Expand-Archive -Path $output -DestinationPath "qt-vsaddin"
+    - name: Copy Qt VS Add-in to Extensions Directory
       run: |
-        $vsixInstallerPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\VSIXInstaller.exe"
-        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait
-
+        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
+        $qtVsToolsPath = Join-Path $extensionsPath "Trolltech\\QtVisualStudioTools"
+        if (Test-Path $qtVsToolsPath) {
+          Remove-Item -Path $qtVsToolsPath -Recurse -Force
+        }
+        New-Item -Path $qtVsToolsPath -ItemType Directory
+        Copy-Item -Path "qt-vsaddin\\*" -Destination $qtVsToolsPath -Recurse
     - name: Verify Qt VS Add-in Installation
       run: |
         $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
