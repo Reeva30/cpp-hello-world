@@ -73,6 +73,43 @@ jobs:
         python -m pip install --upgrade pip
         pip install sphinx sphinx-rtd-theme
 
+
+
+
+
+
+
+ 
+    - name: Download Qt VS Add-in
+      run: |
+        $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
+        $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
+        Invoke-WebRequest -Uri $url -OutFile $output
+
+    - name: Verify SHA-256 Hash
+      run: |
+        $expectedHash = "b1eba080495505638e2431e85ffa4108ee3b688595cc4657f1b80e30712c2f23"
+        $fileHash = Get-FileHash -Path "qt-vsaddin-msvc2022-3.0.2.vsix" -Algorithm SHA256
+        if ($fileHash.Hash -ne $expectedHash) {
+          throw "Hash mismatch: $($fileHash.Hash)"
+        }
+
+    - name: Install Qt VS Add-in
+      run: |
+        $vsixInstallerPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\VSIXInstaller.exe"
+        if (-Not (Test-Path $vsixInstallerPath)) {
+          Write-Error "VSIXInstaller.exe not found at the specified path."
+          exit 1
+        }
+        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait
+
+
+
+
+
+
+
+
     - name: Setup and Execute Build
       shell: cmd
       run: |
@@ -95,6 +132,22 @@ jobs:
         call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
         echo "All checks passed."
 
+
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-Debug
+        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Debug.txt
+
+        
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-Release
+        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Release.txt
+        
 
     - name: Upload build log summary artifact
       if: always()
