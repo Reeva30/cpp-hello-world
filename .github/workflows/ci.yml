@@ -40,6 +40,9 @@ jobs:
         $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions\\Trolltech\\QtVisualStudioTools"
         Write-Host "Listing contents of the Extensions directory:"
         Get-ChildItem -Path $extensionsPath | Format-Table -AutoSize
+        $extensionsPath1 = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE"
+        Write-Host "Listing contents of the Extensions directory:"
+        Get-ChildItem -Path $extensionsPath1 | Format-Table -AutoSize
 
     - name: Verify Qt VS Add-in Installation
       run: |
