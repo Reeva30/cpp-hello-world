@@ -21,12 +21,9 @@ jobs:
     steps:
       - name: Check out the main project repository
         uses: actions/checkout@v4
-        with:
-          repository: OT-OpenTwin/OpenTwin
-          ref: Ci
-          path: OpenTwin
+        
 
-      
+
       - name: Install Qt Visual Studio Tools Extension
         shell: powershell
         run: |
@@ -34,17 +31,18 @@ jobs:
           Invoke-WebRequest -Uri "https://download.qt.io/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix" -OutFile $vsixPath
           & "$env:DEVENV_PATH\devenv.exe" /InstallVSPackage "$vsixPath"
 
-
       - name: Verify Qt Visual Studio Tools Installation
         shell: powershell
         run: |
-          $extensions = & "$env:DEVENV_PATH\devenv.exe" /GetInstalledExtensions
-          if ($extensions -contains "Qt Visual Studio Tools") {
+          $extensionsPath = "$env:APPDATA\Microsoft\VisualStudio\17.0_xxx\Extensions"
+          $qtExtension = Get-ChildItem -Path $extensionsPath -Recurse | Where-Object { $_.Name -eq "QtPackage" }
+          if ($qtExtension) {
             Write-Host "Qt Visual Studio Tools installed successfully."
           } else {
             Write-Host "Qt Visual Studio Tools installation failed."
             exit 1
           }
+
       - name: Set Environment Variables for Qt and MSBuild
         shell: powershell
         run: |
@@ -56,10 +54,17 @@ jobs:
           Write-Host "Environment variables set."
 
       - name: Configure Qt in Visual Studio
-        shell: cmd
+        shell: powershell
         run: |
-          set QTDIR=%QT_PATH%
-          "%DEVENV_PATH%\Extensions\QtVS\qtversion.exe" -add 6.6.1 %QTDIR%
+          $qtPath = $env:QT_PATH
+          if (Test-Path $qtPath) {
+            & "${env:DEVENV_PATH}\Extensions\QtVS\qtversion.exe" -add 6.6.1 $qtPath
+            Write-Host "Qt version configured in Visual Studio."
+          } else {
+            Write-Host "QT_PATH does not exist: $qtPath"
+            exit 1
+          }
+
 
       - name: Setup and Execute Build
         shell: cmd
