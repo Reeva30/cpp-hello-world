@@ -43,7 +43,8 @@ jobs:
 
     - name: Install Qt VS Add-in using Visual Studio CLI
       run: |
-        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\VisualStudio\VsixInstaller.exe" qt-vsaddin-msvc2022-3.0.2.vsix /quiet /logFile:vsix_installer.log
+        $vsixPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VSIXInstaller.exe"
+        & $vsixPath qt-vsaddin-msvc2022-3.0.2.vsix /quiet /logFile:vsix_installer.log
       shell: powershell
 
     - name: Verify Qt VS Add-in Installation
