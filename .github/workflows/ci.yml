@@ -39,15 +39,12 @@ jobs:
         }
         Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait
 
-        
-
     - name: Verify Qt VS Add-in Installation
       run: |
-        set OPENTWIN_DEV_ROOT="C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
-
-        dir %OPENTWIN_DEV_ROOT%
-
         $qtVsToolsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions\\Trolltech\\QtVisualStudioTools"
+        Write-Host "Listing contents of the Extensions directory:"
+        Get-ChildItem -Path "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions" | Format-Table -AutoSize
+        
         if (-Not (Test-Path $qtVsToolsPath)) {
           Write-Error "Qt VS Tools not found in Visual Studio extensions."
           exit 1
