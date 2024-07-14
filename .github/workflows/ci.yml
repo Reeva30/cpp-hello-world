@@ -75,15 +75,59 @@ jobs:
 
 
 
+
     - name: Install Qt
-      id: install-qt
       uses: jurplel/install-qt-action@v4
       with:
           version: '6.6.1'
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2019_64'
-          install-deps: 'true'
+          modules: 'qtcharts qtwebengine'
+          archives: 'qtbase qtsvg'
+          cache: 'false'
+          setup-python: 'true'
+          tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
+          set-env: 'true'
+          tools-only: 'false'
+          aqtversion: '==3.1.*'
+          py7zrversion: '==0.20.*'
+          extra: '--external 7z'
+
+    - name: Set Environment Variables for Qt and MSBuild
+      shell: pwsh
+      run: |
+          $Env:QT_PATH = "${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64"
+          $Env:QtToolsPath = "$Env:QT_PATH\bin"
+          $Env:QtMsBuild = "${{ github.workspace }}\ThirdParty\QtMsBuild"
+          $Env:PATH = "$Env:QT_PATH\bin;$Env:QtMsBuild;$Env:MSBUILD_PATH;$Env:PATH"
+
+          echo "QT_PATH=$Env:QT_PATH" >> $GITHUB_ENV
+          echo "QtToolsPath=$Env:QtToolsPath" >> $GITHUB_ENV
+          echo "QtMsBuild=$Env:QtMsBuild" >> $GITHUB_ENV
+          echo "PATH=$Env:PATH" >> $GITHUB_ENV
+
+    - name: Verify Qt Setup
+      shell: pwsh
+      run: |
+          Write-Host "Verifying Qt setup..."
+          if (-Not $Env:QT_PATH) {
+            Write-Host "QT_PATH is not set."
+            exit 1
+          }
+          if (-Not (Get-Command qmake -ErrorAction SilentlyContinue)) {
+            Write-Host "qmake could not be found"
+            exit 1
+          }
+          if (-Not (Get-Command moc -ErrorAction SilentlyContinue)) {
+            Write-Host "moc could not be found"
+            exit 1
+          }
+          if (-Not (Get-Command uic -ErrorAction SilentlyContinue)) {
+            Write-Host "uic could not be found"
+            exit 1
+          }
+          Write-Host "Qt setup verified successfully."
 
 
 
