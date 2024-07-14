@@ -18,7 +18,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-
     - name: Check out the main project repository
       uses: actions/checkout@v4
       with:
@@ -31,7 +30,7 @@ jobs:
       with:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
-        fetch-depth: 1  # Limit fetching to the last commit
+        fetch-depth: 1
 
     - name: Install Rust 1.76.0
       run: choco install rust --version=1.76.0 -y
@@ -47,7 +46,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14' # specify the version you need
+        node-version: '14'
 
     - name: Install Yarn
       run: npm install -g yarn
@@ -65,8 +64,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install sphinx sphinx-rtd-theme
 
-
-    - name: Download and Extract Qt VS Add-in
+    - name: Download and Verify Qt VS Add-in
       run: |
         $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
         $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
@@ -76,7 +74,18 @@ jobs:
         if ($fileHash.Hash -ne $expectedHash) {
           throw "Hash mismatch: $($fileHash.Hash)"
         }
-        Expand-Archive -Path $output -DestinationPath "qt-vsaddin"
+        Write-Host "Qt VS Add-in downloaded and verified successfully."
+      shell: powershell
+
+    - name: Extract Qt VS Add-in
+      run: |
+        Expand-Archive -Path "qt-vsaddin-msvc2022-3.0.2.vsix" -DestinationPath "qt-vsaddin"
+        if (-Not (Test-Path "qt-vsaddin")) {
+          throw "Extraction failed."
+        }
+        Write-Host "Qt VS Add-in extracted successfully."
+      shell: powershell
+
     - name: Copy Qt VS Add-in to Extensions Directory
       run: |
         $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
@@ -86,6 +95,12 @@ jobs:
         }
         New-Item -Path $qtVsToolsPath -ItemType Directory
         Copy-Item -Path "qt-vsaddin\\*" -Destination $qtVsToolsPath -Recurse
+        if (-Not (Test-Path $qtVsToolsPath)) {
+          throw "Copying to Extensions directory failed."
+        }
+        Write-Host "Qt VS Add-in copied to Extensions directory successfully."
+      shell: powershell
+
     - name: Verify Qt VS Add-in Installation
       run: |
         $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
@@ -98,6 +113,7 @@ jobs:
           exit 1
         }
         Write-Host "Qt VS Tools successfully installed."
+      shell: powershell
 
     - name: Set Up Qt Environment
       run: |
@@ -107,7 +123,6 @@ jobs:
       shell: powershell
 
     - name: Setup and Execute Build
-      shell: cmd
       run: |
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
@@ -127,8 +142,9 @@ jobs:
         echo "Starting BuildAll.bat..."
         call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
         echo "All checks passed."
+      shell: cmd
 
-    - name: Upload build log summary artifact
+    - name: Upload build log summary artifact (Debug)
       if: always()
       uses: actions/upload-artifact@v2
       with:
@@ -142,7 +158,7 @@ jobs:
         name: build-log-Release
         path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Release.txt
 
-    - name: Upload build log summary artifact
+    - name: Upload build log summary artifact (Summary)
       if: always()
       uses: actions/upload-artifact@v2
       with:
