@@ -3,10 +3,10 @@ name: Install Qt VS Add-in and Integrate with Visual Studio 2022
 on:
   push:
     branches:
-      - test
+      - main
   pull_request:
     branches:
-      - test
+      - main
 
 jobs:
   setup-qt-vsaddin:
@@ -18,13 +18,12 @@ jobs:
 
     - name: Verify Visual Studio 2022 installation
       run: |
-        $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        if (-Not (Test-Path $vswherePath)) {
-          Write-Error "vswhere.exe not found. Visual Studio 2022 might not be installed."
+        $vsixInstallerPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\VSIXInstaller.exe"
+        if (-Not (Test-Path $vsixInstallerPath)) {
+          Write-Error "VSIXInstaller.exe not found at the specified path."
           exit 1
         }
-        $vsInstallPath = & $vswherePath -latest -version "[17.0,18.0)" -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-        Write-Output "VS_INSTALL_PATH=$vsInstallPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+        Write-Output "VSIX_INSTALLER_PATH=$vsixInstallerPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
     - name: Download Qt VS Add-in
       run: |
@@ -39,16 +38,6 @@ jobs:
         if ($fileHash.Hash -ne $expectedHash) {
           throw "Hash mismatch: $($fileHash.Hash)"
         }
-
-    - name: Find VSIXInstaller
-      run: |
-        $vsInstallPath = Get-Content $env:GITHUB_ENV | Out-String | Select-String "VS_INSTALL_PATH" | ForEach-Object { $_.ToString().Split("=")[1].Trim() }
-        $vsixInstallerPath = Join-Path -Path $vsInstallPath -ChildPath "Common7\IDE\VSIXInstaller.exe"
-        if (-Not (Test-Path $vsixInstallerPath)) {
-          Write-Error "VSIXInstaller.exe not found."
-          exit 1
-        }
-        Write-Output "VSIX_INSTALLER_PATH=$vsixInstallerPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
     - name: Install Qt VS Add-in
       run: |
