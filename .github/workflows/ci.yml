@@ -25,12 +25,6 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    - name: Check out the third-party repository
-      uses: actions/checkout@v4
-      with:
-        repository: OT-OpenTwin/ThirdParty
-        path: ThirdParty
-        fetch-depth: 1
 
     - name: Install Rust 1.76.0
       run: choco install rust --version=1.76.0 -y
@@ -39,32 +33,7 @@ jobs:
     - name: Add Visual Studio to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Debug - List repository files
-      run: dir /s
-      shell: cmd
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
-    - name: Install Yarn
-      run: npm install -g yarn
-
-    - name: Install dependencies
-      run: yarn install
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-
-    - name: Install Sphinx and dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install sphinx sphinx-rtd-theme
-
-    - name: Download and Verify Qt VS Add-in
+    - name: Download and Install Qt VS Add-in
       run: |
         $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
         $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
@@ -74,45 +43,13 @@ jobs:
         if ($fileHash.Hash -ne $expectedHash) {
           throw "Hash mismatch: $($fileHash.Hash)"
         }
-        Write-Host "Qt VS Add-in downloaded and verified successfully."
-      shell: powershell
-
-    - name: Extract Qt VS Add-in
-      run: |
-        Expand-Archive -Path "qt-vsaddin-msvc2022-3.0.2.vsix" -DestinationPath "qt-vsaddin"
-        if (-Not (Test-Path "qt-vsaddin")) {
-          throw "Extraction failed."
-        }
-        Write-Host "Qt VS Add-in extracted successfully."
-      shell: powershell
-
-    - name: Copy Qt VS Add-in to Extensions Directory
-      run: |
-        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
-        $qtVsToolsPath = Join-Path $extensionsPath "Trolltech\\QtVisualStudioTools"
-        if (Test-Path $qtVsToolsPath) {
-          Remove-Item -Path $qtVsToolsPath -Recurse -Force
-        }
-        New-Item -Path $qtVsToolsPath -ItemType Directory
-        Copy-Item -Path "qt-vsaddin\\*" -Destination $qtVsToolsPath -Recurse
-        if (-Not (Test-Path $qtVsToolsPath)) {
-          throw "Copying to Extensions directory failed."
-        }
-        Write-Host "Qt VS Add-in copied to Extensions directory successfully."
+        Start-Process -Wait -FilePath "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\VSIXInstaller.exe" -ArgumentList "/q", $output
       shell: powershell
 
     - name: Verify Qt VS Add-in Installation
       run: |
         $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
-        Write-Host "Listing contents of the Extensions directory:"
-        Get-ChildItem -Path $extensionsPath | Format-Table -AutoSize
-        
-        $qtVsToolsPath = Join-Path $extensionsPath "Trolltech\\QtVisualStudioTools"
-        if (-Not (Test-Path $qtVsToolsPath)) {
-          Write-Error "Qt VS Tools not found in Visual Studio extensions."
-          exit 1
-        }
-        Write-Host "Qt VS Tools successfully installed."
+        Get-ChildItem -Path $extensionsPath -Recurse | Select-String -Pattern "QtVisualStudioTools"
       shell: powershell
 
     - name: Set Up Qt Environment
@@ -121,46 +58,3 @@ jobs:
         [Environment]::SetEnvironmentVariable("QTDIR", $qtPath, [System.EnvironmentVariableTarget]::Machine)
         [Environment]::SetEnvironmentVariable("Path", "$($env:Path);$qtPath\\bin", [System.EnvironmentVariableTarget]::Machine)
       shell: powershell
-
-    - name: Setup and Execute Build
-      run: |
-        echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022=%DEVENV_PATH%
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
-        echo "Checking directories and necessary files..."
-        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
-        dir %OPENTWIN_DEV_ROOT%
-        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
-        dir %OPENTWIN_THIRDPARTY_ROOT%
-        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-        dir "%DEVENV_ROOT_2022%"
-        echo "Checking if BuildAll.bat exists..."
-        echo "Starting BuildAll.bat..."
-        call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
-        echo "All checks passed."
-      shell: cmd
-
-    - name: Upload build log summary artifact (Debug)
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-log-Debug
-        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Debug.txt
-
-    - name: Upload build log release artifact
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-log-Release
-        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Release.txt
-
-    - name: Upload build log summary artifact (Summary)
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-log-summary
-        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Summary.txt
