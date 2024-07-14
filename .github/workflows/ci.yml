@@ -3,10 +3,10 @@ name: Setup Qt Environment on Windows
 on:
   push:
     branches:
-      - test
+      - main
   pull_request:
     branches:
-      - test
+      - main
 
 jobs:
   setup_qt_windows:
@@ -16,10 +16,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Visual Studio 2022
+      - name: Install Visual Studio 2022
         uses: microsoft/setup-msbuild@v1.0.2
         with:
           vs-version: '2022'
+
+      - name: Install Visual Studio 2022 Build Tools
+        run: |
+          # Install Visual Studio 2022 Build Tools
+          choco install visualstudio2022buildtools --version=17.0.3 --yes
+          # Install necessary components
+          & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait
+        shell: powershell
 
       - name: Install Qt
         run: |
@@ -39,3 +47,4 @@ jobs:
         run: |
           & $Env:QTDIR\bin\qmake -v
         shell: powershell
+
