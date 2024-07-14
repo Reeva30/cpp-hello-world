@@ -1,125 +1,158 @@
-name: Build and Test C++ Project
+name: Add Qt VS Add-in to Visual Studio 2022 and Configure Qt Version
 
 on:
   push:
     branches:
-      - test  # Adjust the branch as needed
+      - test
+  pull_request:
+    branches:
+      - test
+
+env:
+  DEVENV_PATH: "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE"
+  DEVENV_PATH2: "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\devenv.com"
+  QT_PATH: "${{ github.workspace }}\\ThirdParty\\Qt\\6.6.1\\msvc2019_64"
+
+permissions:
+  contents: read
 
 jobs:
-  setup-environment:
+  build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    
+    - name: Check out the main project repository
+      uses: actions/checkout@v4
+      with:
+        repository: OT-OpenTwin/OpenTwin
+        ref: Ci
+        path: OpenTwin
 
-      - name: Checkout OpenTwin repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'OT-OpenTwin/OpenTwin'
-          path: 'OpenTwin'  # Directory to clone the repository into
+  
 
-      - name: Checkout ThirdParty repository
-        uses: actions/checkout@v3
-        with:
-          repository: 'OT-OpenTwin/ThirdParty'
-          path: 'ThirdParty'  # Directory to clone the repository into
+    - name: Add Visual Studio to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Set up Chocolatey
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      - name: Install Visual Studio 2022 Build Tools
-        run: |
-          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Windows10SDK --add Microsoft.VisualStudio.Component.VC.Redist.14.Latest"
+  
+    - name: Verify Visual Studio 2022 installation
+      run: |
+        $vswherePath = "${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+        if (-Not (Test-Path $vswherePath)) {
+          Write-Error "vswhere.exe not found. Visual Studio 2022 might not be installed."
+          exit 1
+        }
+        $vsInstallPath = & $vswherePath -latest -version "[17.0,18.0)" -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+        Write-Output "VS_INSTALL_PATH=$vsInstallPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Install CMake
-        run: |
-          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+    - name: Download Qt VS Add-in
+      run: |
+        $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
+        $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
+        Invoke-WebRequest -Uri $url -OutFile $output
 
-      - name: Install Rust
-        run: |
-          choco install -y rust --version=1.76.0
+    - name: Verify SHA-256 Hash
+      run: |
+        $expectedHash = "b1eba080495505638e2431e85ffa4108ee3b688595cc4657f1b80e30712c2f23"
+        $fileHash = Get-FileHash -Path "qt-vsaddin-msvc2022-3.0.2.vsix" -Algorithm SHA256
+        if ($fileHash.Hash -ne $expectedHash) {
+          throw "Hash mismatch: $($fileHash.Hash)"
+        }
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '6.5.2'
+    - name: Find VSIXInstaller
+      run: |
+        $vswherePath = "${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+        $vsInstallPath = & $vswherePath -latest -version "[17.0,18.0)" -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+        $vsixInstallerPath = Join-Path -Path $vsInstallPath -ChildPath "Common7\\IDE\\VSIXInstaller.exe"
+        if (-Not (Test-Path $vsixInstallerPath)) {
+          Write-Error "VSIXInstaller.exe not found."
+          exit 1
+        }
+        Write-Output "VSIX_INSTALLER_PATH=$vsixInstallerPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Upload environment as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: environment
-          path: .
+    - name: Install Qt VS Add-in
+      run: |
+        $vsixInstallerPath = $env:VSIX_INSTALLER_PATH
+        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait
 
-  build-and-test:
-    runs-on: windows-latest
-    needs: setup-environment
+    - name: Configure Qt Version
+      env:
+        QT_PATH: ${{ github.workspace }}\\ThirdParty\\Qt\\6.6.1\\msvc2019_64
+      run: |
+        $qtVersionName = "6.6.1"
+        $qtPath = "${env:QT_PATH}"
+        
+        # Paths to check for Qt configuration
+        $configPaths = @(
+            "$env:APPDATA\\QtProject\\qtcreator\\qtversion.xml",
+            "$env:LOCALAPPDATA\\QtProject\\qtcreator\\qtversion.xml"
+        )
+        
+        # Path to qmake.exe
+        $qmakePath = Join-Path $qtPath "bin\\qmake.exe"
+        
+        $configFound = $false
+        foreach ($configPath in $configPaths) {
+            if (Test-Path $configPath) {
+                $configFound = $true
+                [xml]$qtConfig = Get-Content $configPath
+                
+                # Create a new qtversion element if it doesn't exist
+                if (-Not $qtConfig.qtcreator.qtversions.qtversion) {
+                    $qtConfig.qtcreator.AppendChild($qtConfig.CreateElement("qtversions")) | Out-Null
+                }
+                
+                $newVersion = $qtConfig.CreateElement("qtversion")
+                $newVersion.SetAttribute("Id", "qt." + $qtVersionName)
+                $newVersion.SetAttribute("Name", $qtVersionName)
+                $newVersion.SetAttribute("QMakePath", $qmakePath)
+                
+                # Append the new version to the qtversions node
+                $qtConfig.qtcreator.qtversions.AppendChild($newVersion) | Out-Null
+                $qtConfig.Save($configPath)
+                
+                Write-Host "Configured Qt version $qtVersionName with path $qtPath in $configPath"
+            }
+        }
+        
+        if (-Not $configFound) {
+            Write-Error "Qt configuration file not found in expected paths."
+            Write-Host "Expected paths: $($configPaths -join ', ')"
+            Write-Host "Ensure that Qt Creator is installed and has been run at least once to generate configuration files."
+            exit 1
+        } # <- Added missing closing brace
 
-    steps:
-      - name: Download environment artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: environment
-          path: .
 
-      - name: Cache CMake build
-        uses: actions/cache@v3
-        with:
-          path: |
-            build
-          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cmake-build-
+    - name: Debug - List repository files
+      run: dir /s
+      shell: cmd
 
-      - name: Set up Visual Studio Build Environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+    - name: Setup and Execute Build
+      shell: cmd
+      run: |
+        echo "Current directory: %cd%"
+        set OPENTWIN_DEV_ROOT=%cd%\\OpenTwin
+        set DEVENV_ROOT_2022=%DEVENV_PATH%
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\\ThirdParty
+        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
+        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
+        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
+        echo "Checking directories and necessary files..."
+        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
+        dir %OPENTWIN_DEV_ROOT%
+        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
+        dir %OPENTWIN_THIRDPARTY_ROOT%
+        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
+        dir "%DEVENV_ROOT_2022%"
+        echo "Checking if BuildAll.bat exists..."
+        echo "Starting BuildAll.bat..."
+        call %OPENTWIN_DEV_ROOT%\\Scripts\\BuildAndTest\\BuildAll.bat 
+        echo "All checks passed."
 
-      - name: Generate Build Files with CMake
-        run: |
-          cmake -B build -S .
-
-      - name: Build Project
-        run: |
-          cmake --build build --config Release
-
-      - name: Check Build Artifact Size
-        run: |
-          du -sh build
-
-      - name: Save build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-artifacts
-          path: build
-
-      - name: Configure AWS credentials
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set default.region ${{ secrets.AWS_REGION }}
-
-      - name: Upload build artifacts to S3
-        run: |
-          aws s3 cp build s3://my-github-artifacts-bucket/build --recursive
-
-  test:
-    runs-on: windows-latest
-    needs: build-and-test
-
-    steps:
-      - name: Download environment artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: environment
-          path: .
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
-          path: build
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-summary
+        path: ${{ github.workspace }}\\OpenTwin\\Scripts\\BuildAndTest\\buildLog_Summary.txt
