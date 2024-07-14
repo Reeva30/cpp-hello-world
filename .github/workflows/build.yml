@@ -24,23 +24,23 @@ jobs:
           ref: Ci
           path: OpenTwin
 
+      - name: Check out the ThirdParty repository
+        uses: actions/checkout@v4
+        with:
+          repository: OT-OpenTwin/ThirdParty
+          path: ThirdParty
+
       - name: Add Visual Studio to PATH
         uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Install Qt
-        id: install-qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.6.1'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2019_64'
 
       - name: Set QTDIR and QtToolsPath
         shell: bash
         run: |
-          echo "QTDIR=${{ steps.install-qt.outputs.QT_ROOT_DIR }}" >> "$GITHUB_ENV"
-          echo "QtToolsPath=${{ steps.install-qt.outputs.QT_ROOT_DIR }}/bin" >> "$GITHUB_ENV"
+          export QTDIR=$GITHUB_WORKSPACE/ThirdParty/Qt/6.6.1/msvc2019_64
+          export QtToolsPath=$QTDIR/bin
+          echo "QTDIR=$QTDIR" >> "$GITHUB_ENV"
+          echo "QtToolsPath=$QtToolsPath" >> "$GITHUB_ENV"
+          echo "Path=$QtToolsPath:$PATH" >> "$GITHUB_ENV"
 
       - name: Verify Qt Setup
         shell: bash
@@ -50,15 +50,15 @@ jobs:
             echo "QTDIR is not set."
             exit 1
           fi
-          if ! command -v qmake &> /dev/null; then
+          if ! command -v $QtToolsPath/qmake &> /dev/null; then
             echo "qmake could not be found"
             exit 1
           fi
-          if ! command -v moc &> /dev/null; then
+          if ! command -v $QtToolsPath/moc &> /dev/null; then
             echo "moc could not be found"
             exit 1
           fi
-          if ! command -v uic &> /dev/null; then
+          if ! command -v $QtToolsPath/uic &> /dev/null; then
             echo "uic could not be found"
             exit 1
           fi
