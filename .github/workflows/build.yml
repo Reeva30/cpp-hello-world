@@ -55,8 +55,9 @@ jobs:
       - name: Verify Qt Visual Studio Tools Installation
         shell: powershell
         run: |
-          $extensions = & "$env:DEVENV_PATH\devenv.exe" /GetInstalledExtensions
-          if ($extensions -like "*Qt Visual Studio Tools*") {
+          $extensionsPath = "$env:LOCALAPPDATA\Microsoft\VisualStudio\17.0_*\Extensions"
+          $qtExtension = Get-ChildItem -Path $extensionsPath -Recurse | Where-Object { $_.Name -eq "qtvs" }
+          if ($qtExtension) {
             Write-Host "Qt Visual Studio Tools installed successfully."
           } else {
             Write-Host "Qt Visual Studio Tools installation failed."
