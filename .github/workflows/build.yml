@@ -34,6 +34,9 @@ jobs:
       - name: Add Visual Studio to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
+   
+
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
@@ -53,24 +56,23 @@ jobs:
           extra: '--external 7z'
 
       - name: Set Environment Variables for Qt and MSBuild
-        shell: pwsh
+        shell: powershell
         run: |
-          $qtPath = "${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64"
-          $qtMsBuildPath = "${{ github.workspace }}\ThirdParty\QtMsBuild"
-          [System.Environment]::SetEnvironmentVariable('QT_PATH', $qtPath, [System.EnvironmentVariableTarget]::Process)
-          [System.Environment]::SetEnvironmentVariable('QtToolsPath', "$qtPath\bin", [System.EnvironmentVariableTarget]::Process)
-          [System.Environment]::SetEnvironmentVariable('QtMsBuild', $qtMsBuildPath, [System.EnvironmentVariableTarget]::Process)
-          [System.Environment]::SetEnvironmentVariable('PATH', "$qtPath\bin;$qtMsBuildPath;$Env:PATH", [System.EnvironmentVariableTarget]::Process)
-          Write-Host "QT_PATH=$qtPath"
-          Write-Host "QtToolsPath=$qtPath\bin"
-          Write-Host "QtMsBuild=$qtMsBuildPath"
-          Write-Host "PATH=$qtPath\bin;$qtMsBuildPath;$Env:PATH"
+          $env:QT_PATH="${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64"
+          $env:QtMsBuild="${{ github.workspace }}\ThirdParty\QtMsBuild"
+          $env:QtToolsPath="$env:QT_PATH\bin"
+          $env:PATH="$env:QtToolsPath;$env:QtMsBuild;$env:PATH"
+          Write-Output "QT_PATH=$env:QT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Output "QtMsBuild=$env:QtMsBuild" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Output "QtToolsPath=$env:QtToolsPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Output "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Environment variables set."
 
       - name: Verify Qt Setup
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host "Verifying Qt setup..."
-          if (-Not $Env:QT_PATH) {
+          if (-Not $env:QT_PATH) {
             Write-Host "QT_PATH is not set."
             exit 1
           }
@@ -87,6 +89,7 @@ jobs:
             exit 1
           }
           Write-Host "Qt setup verified successfully."
+
 
 
      
