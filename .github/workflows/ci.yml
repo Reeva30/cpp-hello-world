@@ -39,9 +39,9 @@ jobs:
 
     - name: Set Up Qt Environment
       run: |
-        $qtPath = "C:\\Qt\\6.6.1\\msvc2019_64"
-        [Environment]::SetEnvironmentVariable("QTDIR", $qtPath, [System.EnvironmentVariableTarget]::Machine)
-        [Environment]::SetEnvironmentVariable("Path", "$($env:Path);$qtPath\\bin", [System.EnvironmentVariableTarget]::Machine)
+        $qtPath = "${{ github.workspace }}\\Qt\\6.6.1\\msvc2019_64"
+        echo "QTDIR=$qtPath" >> $GITHUB_ENV
+        echo "Path=$($env:Path);$qtPath\\bin" >> $GITHUB_ENV
       shell: powershell
 
     - name: Verify Qt Setup
