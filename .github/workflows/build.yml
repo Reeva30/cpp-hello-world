@@ -50,7 +50,7 @@ jobs:
         run: |
           $vsixPath = "$env:TEMP\QtVsTools.vsix"
           Invoke-WebRequest -Uri "https://download.qt.io/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix" -OutFile $vsixPath
-          & "$env:DEVENV_PATH\devenv.exe" /InstallVSPackage "$vsixPath"
+          Start-Process -FilePath "$env:DEVENV_PATH\devenv.exe" -ArgumentList "/InstallVSPackage $vsixPath" -Wait
 
       - name: Verify Qt Visual Studio Tools Installation
         shell: powershell
@@ -73,52 +73,3 @@ jobs:
           Write-Output "QtToolsPath=$env:QtToolsPath" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Output "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Host "Environment variables set."
-
-      - name: Configure Qt in Visual Studio
-        shell: powershell
-        run: |
-          $qtPath = $env:QT_PATH
-          if (Test-Path $qtPath) {
-            & "${env:DEVENV_PATH}\Extensions\QtVS\qtversion.exe" -add 6.6.1 $qtPath
-            Write-Host "Qt version configured in Visual Studio."
-          } else {
-            Write-Host "QT_PATH does not exist: $qtPath"
-            exit 1
-          }
-
-      - name: Setup and Execute Build
-        shell: cmd
-        run: |
-          echo "Current directory: %cd%"
-          set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-          set DEVENV_ROOT_2022=%DEVENV_PATH%
-          set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-          echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-          echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-          echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
-          echo "Checking directories and necessary files..."
-          echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
-          dir %OPENTWIN_DEV_ROOT%
-          echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
-          dir %OPENTWIN_THIRDPARTY_ROOT%
-          echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-          dir "%DEVENV_ROOT_2022%"
-          echo "Checking if BuildAll.bat exists..."
-          if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
-            echo "Starting BuildAll.bat..."
-            call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
-          ) else (
-            echo "BuildAll.bat not found."
-            exit /b 1
-          )
-
-      - name: Verify the Build
-        shell: cmd
-        run: |
-          echo "Verifying build..."
-          if exist %OPENTWIN_DEV_ROOT%\path\to\your\output\binary.exe (
-            echo "Build successful."
-          ) else (
-            echo "Build failed."
-            exit /b 1
-          )
