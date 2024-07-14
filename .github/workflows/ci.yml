@@ -37,14 +37,18 @@ jobs:
           Write-Error "VSIXInstaller.exe not found at the specified path."
           exit 1
         }
-        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait
+        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait -PassThru | Tee-Object -FilePath "vsixinstaller.log"
+        
+    - name: Print VSIX Installation Log
+      run: cat vsixinstaller.log
 
     - name: Verify Qt VS Add-in Installation
       run: |
-        $qtVsToolsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions\\Trolltech\\QtVisualStudioTools"
+        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
         Write-Host "Listing contents of the Extensions directory:"
-        Get-ChildItem -Path "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions" | Format-Table -AutoSize
+        Get-ChildItem -Path $extensionsPath | Format-Table -AutoSize
         
+        $qtVsToolsPath = Join-Path $extensionsPath "Trolltech\\QtVisualStudioTools"
         if (-Not (Test-Path $qtVsToolsPath)) {
           Write-Error "Qt VS Tools not found in Visual Studio extensions."
           exit 1
