@@ -26,34 +26,25 @@ jobs:
           ref: Ci
           path: OpenTwin
 
-      - name: Check out the ThirdParty repository
-        uses: actions/checkout@v4
-        with:
-          repository: OT-OpenTwin/ThirdParty
-          ref: main
-          path: ThirdParty
+      
+      - name: Install Qt Visual Studio Tools Extension
+        shell: powershell
+        run: |
+          $vsixPath = "$env:TEMP\QtVsTools.vsix"
+          Invoke-WebRequest -Uri "https://download.qt.io/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix" -OutFile $vsixPath
+          & "$env:DEVENV_PATH\devenv.exe" /InstallVSPackage "$vsixPath"
 
-      - name: Add Visual Studio to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.6.1'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2019_64'
-          modules: 'qtcharts qtwebengine'
-          archives: 'qtbase qtsvg'
-          cache: 'false'
-          setup-python: 'true'
-          tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
-          set-env: 'true'
-          tools-only: 'false'
-          aqtversion: '==3.1.*'
-          py7zrversion: '==0.20.*'
-          extra: '--external 7z'
-
+      - name: Verify Qt Visual Studio Tools Installation
+        shell: powershell
+        run: |
+          $extensions = & "$env:DEVENV_PATH\devenv.exe" /GetInstalledExtensions
+          if ($extensions -contains "Qt Visual Studio Tools") {
+            Write-Host "Qt Visual Studio Tools installed successfully."
+          } else {
+            Write-Host "Qt Visual Studio Tools installation failed."
+            exit 1
+          }
       - name: Set Environment Variables for Qt and MSBuild
         shell: powershell
         run: |
