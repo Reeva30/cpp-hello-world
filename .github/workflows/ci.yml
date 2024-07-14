@@ -37,10 +37,13 @@ jobs:
         }
         New-Item -Path $qtVsToolsPath -ItemType Directory
         Copy-Item -Path "qt-vsaddin\\*" -Destination $qtVsToolsPath -Recurse
+        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions\\Trolltech\\QtVisualStudioTools"
+        Write-Host "Listing contents of the Extensions directory:"
+        Get-ChildItem -Path $extensionsPath | Format-Table -AutoSize
 
     - name: Verify Qt VS Add-in Installation
       run: |
-        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions\\Trolltech\\QtVisualStudioTools"
+        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
         Write-Host "Listing contents of the Extensions directory:"
         Get-ChildItem -Path $extensionsPath | Format-Table -AutoSize
         
