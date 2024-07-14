@@ -29,64 +29,54 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v4
+      uses: jurplel/install-qt-action@v3
       with:
-        version: '6.6.1'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
+        version: ${{ env.QT_VERSION }}
+        host: windows
+        target: desktop
+        arch: win64_msvc2019_64
+        dir: ${{ runner.temp }}
+        setup-python: false
 
-    - name: Set QTDIR and QtToolsPath
+    - name: Print Qt version information
+      run: qmake -v
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Create build folder
+      run: mkdir -p ${{ runner.temp }}\build
+
+    - name: Set Qt Environment Variables
+      run: |
+        echo "Setting Qt Environment Variables"
+        echo "QTDIR=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64" >> $GITHUB_ENV
+        echo "QtToolsPath=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" >> $GITHUB_ENV
+        echo "${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" >> $GITHUB_PATH
+        echo "${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/lib" >> $GITHUB_PATH
       shell: bash
-      run: |
-        echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
-        echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
 
-    - name: Verify Qt Setup
-      shell: bash
+    - name: Install Vcpkg and cURL
+      working-directory: ${{ runner.temp }}
       run: |
-        echo "Verifying Qt setup..."
-        if [ -z "$QTDIR" ]; then
-          echo "QTDIR is not set."
-          exit 1
-        fi
-        if ! command -v qmake &> /dev/null; then
-          echo "qmake could not be found"
-          exit 1
-        fi
-        if ! command -v moc &> /dev/null; then
-          echo "moc could not be found"
-          exit 1
-        fi
-        if ! command -v uic &> /dev/null; then
-          echo "uic could not be found"
-          exit 1
-        fi
-        echo "Qt setup verified successfully."
+        git clone https://github.com/microsoft/vcpkg.git
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg integrate install
+        .\vcpkg install curl
+        echo "${{ runner.temp }}/vcpkg/installed/x64-windows/include" >> $GITHUB_PATH
+        echo "${{ runner.temp }}/vcpkg/installed/x64-windows/lib" >> $GITHUB_PATH
 
-
-    - name: Setup and Execute Build
+    - name: Build with msbuild
+      working-directory: ${{ github.workspace }}
       run: |
-        echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022=%DEVENV_PATH%
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
-        echo "Checking directories and necessary files..."
-        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
-        dir %OPENTWIN_DEV_ROOT%
-        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
-        dir %OPENTWIN_THIRDPARTY_ROOT%
-        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-        dir "%DEVENV_ROOT_2022%"
-        echo "Checking if BuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
-          echo "Starting BuildAll.bat..."
-          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
-        ) else (
-          echo "BuildAll.bat not found."
-          exit /b 1
-        )
-      shell: cmd
+        echo "Current directory: $(pwd)"
+        msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:OutDir=${{ runner.temp }}\build\ "${{ github.workspace }}\${{ env.SOLUTION_FILE_PATH }}"
+
+    - name: List contents of the build directory
+      run: ls -R ${{ runner.temp }}\build
+
+    - name: Deploy with windeployqt
+      run: |
+        mkdir -p ${{ runner.temp }}\deploy
+        windeployqt --dir ${{ runner.temp }}\deploy ${{ runner.temp }}\build\Release\your_executable.exe
