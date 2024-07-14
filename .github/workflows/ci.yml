@@ -3,10 +3,10 @@ name: Setup Qt Environment on Windows
 on:
   push:
     branches:
-      - main
+      - test
   pull_request:
     branches:
-      - main
+      - test
 
 jobs:
   setup_qt_windows:
