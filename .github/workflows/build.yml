@@ -3,10 +3,10 @@ name: Install Qt VS Add-in and Build Qt Project
 on:
   push:
     branches:
-      - try
+      - test
   pull_request:
     branches:
-      - try
+      - test
 
 env:
   DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
@@ -21,8 +21,29 @@ jobs:
     steps:
       - name: Check out the main project repository
         uses: actions/checkout@v4
-        
+        with:
+          repository: OT-OpenTwin/OpenTwin
+          ref: Ci
+          path: OpenTwin
 
+     
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.6.1'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtcharts qtwebengine'
+          archives: 'qtbase qtsvg'
+          cache: 'false'
+          setup-python: 'true'
+          tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
+          set-env: 'true'
+          tools-only: 'false'
+          aqtversion: '==3.1.*'
+          py7zrversion: '==0.20.*'
+          extra: '--external 7z'
 
       - name: Install Qt Visual Studio Tools Extension
         shell: powershell
@@ -34,9 +55,8 @@ jobs:
       - name: Verify Qt Visual Studio Tools Installation
         shell: powershell
         run: |
-          $extensionsPath = "$env:APPDATA\Microsoft\VisualStudio\17.0_xxx\Extensions"
-          $qtExtension = Get-ChildItem -Path $extensionsPath -Recurse | Where-Object { $_.Name -eq "QtPackage" }
-          if ($qtExtension) {
+          $extensions = & "$env:DEVENV_PATH\devenv.exe" /GetInstalledExtensions
+          if ($extensions -like "*Qt Visual Studio Tools*") {
             Write-Host "Qt Visual Studio Tools installed successfully."
           } else {
             Write-Host "Qt Visual Studio Tools installation failed."
@@ -64,7 +84,6 @@ jobs:
             Write-Host "QT_PATH does not exist: $qtPath"
             exit 1
           }
-
 
       - name: Setup and Execute Build
         shell: cmd
