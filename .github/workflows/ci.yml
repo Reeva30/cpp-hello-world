@@ -11,7 +11,6 @@ on:
 env:
   DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
   DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
-  QT_PATH: ${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64
 
 jobs:
   build:
@@ -41,7 +40,7 @@ jobs:
       run: |
         $qtPath = "${{ github.workspace }}\\Qt\\6.6.1\\msvc2019_64"
         echo "QTDIR=$qtPath" >> $GITHUB_ENV
-        echo "Path=$($env:Path);$qtPath\\bin" >> $GITHUB_ENV
+        echo "Path=$qtPath\\bin:$env:Path" >> $GITHUB_ENV
       shell: powershell
 
     - name: Verify Qt Setup
