@@ -29,33 +29,39 @@ jobs:
     - name: Add Visual Studio to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Download Qt VS Add-in
-      run: |
-        $url = "https://mirror.netcologne.de/qtproject/development_releases/vsaddin/3.0.2/qt-vsaddin-msvc2022-3.0.2.vsix"
-        $output = "qt-vsaddin-msvc2022-3.0.2.vsix"
-        Invoke-WebRequest -Uri $url -OutFile $output
-        $expectedHash = "b1eba080495505638e2431e85ffa4108ee3b688595cc4657f1b80e30712c2f23"
-        $fileHash = Get-FileHash -Path $output -Algorithm SHA256
-        if ($fileHash.Hash -ne $expectedHash) {
-          throw "Hash mismatch: $($fileHash.Hash)"
-        }
-      shell: powershell
-
-    - name: Install Qt VS Add-in using Visual Studio CLI
-      run: |
-        $vsixPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VSIXInstaller.exe"
-        & $vsixPath qt-vsaddin-msvc2022-3.0.2.vsix /quiet /logFile:vsix_installer.log
-      shell: powershell
-
-    - name: Verify Qt VS Add-in Installation
-      run: |
-        $extensionsPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\Extensions"
-        Get-ChildItem -Path $extensionsPath -Recurse | Select-String -Pattern "QtVisualStudioTools"
-      shell: powershell
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.6.1'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
 
     - name: Set Up Qt Environment
       run: |
-        $qtPath = "${{ env.QT_PATH }}"
+        $qtPath = "C:\\Qt\\6.6.1\\msvc2019_64"
         [Environment]::SetEnvironmentVariable("QTDIR", $qtPath, [System.EnvironmentVariableTarget]::Machine)
         [Environment]::SetEnvironmentVariable("Path", "$($env:Path);$qtPath\\bin", [System.EnvironmentVariableTarget]::Machine)
+      shell: powershell
+
+    - name: Verify Qt Setup
+      run: |
+        echo "Verifying Qt setup..."
+        if (-Not $env:QTDIR) {
+          Write-Error "QTDIR is not set."
+          exit 1
+        }
+        if (-Not (Get-Command qmake -ErrorAction SilentlyContinue)) {
+          Write-Error "qmake is not found in PATH."
+          exit 1
+        }
+        if (-Not (Get-Command moc -ErrorAction SilentlyContinue)) {
+          Write-Error "moc is not found in PATH."
+          exit 1
+        }
+        if (-Not (Get-Command uic -ErrorAction SilentlyContinue)) {
+          Write-Error "uic is not found in PATH."
+          exit 1
+        }
+        echo "Qt setup verified successfully."
       shell: powershell
