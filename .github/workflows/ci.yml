@@ -1,4 +1,4 @@
-name: Install Qt VS Add-in and Build Qt Project
+name: Setup Qt Environment on Windows
 
 on:
   push:
@@ -8,75 +8,34 @@ on:
     branches:
       - test
 
-env:
-  DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
-  DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
-
 jobs:
-  build:
+  setup_qt_windows:
     runs-on: windows-latest
 
     steps:
-    - name: Check out the main project repository
-      uses: actions/checkout@v4
-      with:
-        repository: OT-OpenTwin/OpenTwin
-        ref: Ci
-        path: OpenTwin
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
+      - name: Set up Visual Studio 2022
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: '2022'
 
-    - name: Add Visual Studio to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      - name: Install Qt
+        run: |
+          choco install qt --version=5.15.2 --yes
+        shell: powershell
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: ${{ env.QT_VERSION }}
-        host: windows
-        target: desktop
-        arch: win64_msvc2019_64
-        dir: ${{ runner.temp }}
-        setup-python: false
+      - name: Set up Qt environment variables
+        run: |
+          $QtPath = "C:\Qt\5.15.2\msvc2019_64"
+          echo "QTDIR=$QtPath" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+          echo "PATH=$QtPath\bin;$Env:PATH" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+          echo "QT_PLUGIN_PATH=$QtPath\plugins" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+          echo "QML2_IMPORT_PATH=$QtPath\qml" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+        shell: powershell
 
-    - name: Print Qt version information
-      run: qmake -v
-
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-
-    - name: Create build folder
-      run: mkdir -p ${{ runner.temp }}\build
-
-    - name: Set Qt Environment Variables
-      run: |
-        echo "Setting Qt Environment Variables"
-        echo "QTDIR=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64" >> $GITHUB_ENV
-        echo "QtToolsPath=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" >> $GITHUB_ENV
-        echo "${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" >> $GITHUB_PATH
-        echo "${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/lib" >> $GITHUB_PATH
-      shell: bash
-
-    - name: Install Vcpkg and cURL
-      working-directory: ${{ runner.temp }}
-      run: |
-        git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
-        .\bootstrap-vcpkg.bat
-        .\vcpkg integrate install
-        .\vcpkg install curl
-        echo "${{ runner.temp }}/vcpkg/installed/x64-windows/include" >> $GITHUB_PATH
-        echo "${{ runner.temp }}/vcpkg/installed/x64-windows/lib" >> $GITHUB_PATH
-
-    - name: Build with msbuild
-      working-directory: ${{ github.workspace }}
-      run: |
-        echo "Current directory: $(pwd)"
-        msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:OutDir=${{ runner.temp }}\build\ "${{ github.workspace }}\${{ env.SOLUTION_FILE_PATH }}"
-
-    - name: List contents of the build directory
-      run: ls -R ${{ runner.temp }}\build
-
-    - name: Deploy with windeployqt
-      run: |
-        mkdir -p ${{ runner.temp }}\deploy
-        windeployqt --dir ${{ runner.temp }}\deploy ${{ runner.temp }}\build\Release\your_executable.exe
+      - name: Verify Qt installation
+        run: |
+          & $Env:QTDIR\bin\qmake -v
+        shell: powershell
