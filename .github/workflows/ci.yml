@@ -37,10 +37,14 @@ jobs:
           Write-Error "VSIXInstaller.exe not found at the specified path."
           exit 1
         }
-        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait -PassThru | Tee-Object -FilePath "vsixinstaller.log"
-        
-    - name: Print VSIX Installation Log
-      run: cat vsixinstaller.log
+        Start-Process -FilePath $vsixInstallerPath -ArgumentList "/q", "qt-vsaddin-msvc2022-3.0.2.vsix" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "vsixinstaller_stdout.log" -RedirectStandardError "vsixinstaller_stderr.log"
+
+    - name: Print VSIX Installation Logs
+      run: |
+        Write-Host "VSIX Installer Standard Output:"
+        Get-Content vsixinstaller_stdout.log
+        Write-Host "VSIX Installer Standard Error:"
+        Get-Content vsixinstaller_stderr.log
 
     - name: Verify Qt VS Add-in Installation
       run: |
