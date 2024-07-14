@@ -58,9 +58,6 @@ jobs:
       - name: Set Environment Variables for Qt and MSBuild
         shell: powershell
         run: |
-          $env:QT_PATH="${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64"
-          $env:QtMsBuild="${{ github.workspace }}\ThirdParty\QtMsBuild"
-          $env:QtToolsPath="$env:QT_PATH\bin"
           $env:PATH="$env:QtToolsPath;$env:QtMsBuild;$env:PATH"
           Write-Output "QT_PATH=$env:QT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Output "QtMsBuild=$env:QtMsBuild" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -68,27 +65,6 @@ jobs:
           Write-Output "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Host "Environment variables set."
 
-      - name: Verify Qt Setup
-        shell: powershell
-        run: |
-          Write-Host "Verifying Qt setup..."
-          if (-Not $env:QT_PATH) {
-            Write-Host "QT_PATH is not set."
-            exit 1
-          }
-          if (-Not (Get-Command qmake -ErrorAction SilentlyContinue)) {
-            Write-Host "qmake could not be found"
-            exit 1
-          }
-          if (-Not (Get-Command moc -ErrorAction SilentlyContinue)) {
-            Write-Host "moc could not be found"
-            exit 1
-          }
-          if (-Not (Get-Command uic -ErrorAction SilentlyContinue)) {
-            Write-Host "uic could not be found"
-            exit 1
-          }
-          Write-Host "Qt setup verified successfully."
 
 
 
