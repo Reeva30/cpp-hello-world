@@ -55,15 +55,15 @@ jobs:
       - name: Verify Qt Visual Studio Tools Installation
         shell: powershell
         run: |
-          $extensionsPath = "$env:LOCALAPPDATA\Microsoft\VisualStudio\17.0*\Extensions"
-          $qtExtension = Get-ChildItem -Path $extensionsPath -Recurse | Where-Object { $_.Name -match "qtvs" }
+          $extensions = & "$env:DEVENV_PATH\devenv.exe" /GetInstalledExtensions
+          $qtExtension = $extensions | Select-String -Pattern "Qt Visual Studio Tools"
           if ($qtExtension) {
             Write-Host "Qt Visual Studio Tools installed successfully."
           } else {
             Write-Host "Qt Visual Studio Tools installation failed."
             exit 1
           }
-          
+
       - name: Set Environment Variables for Qt and MSBuild
         shell: powershell
         run: |
