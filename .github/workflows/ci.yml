@@ -1,94 +1,36 @@
+name: Build Qt Project with Visual Studio
 
-name: MSBuild
-
-on:
-  push:
-    branches: [ "dev" ]
-  pull_request:
-    branches: [ "dev" ]
-
-env:
-  DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
-  DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
-
-permissions:
-  contents: read
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    
- # Step 1: Check out the main project repository
-    - name: Check out the main project repository
+    - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v2
       with:
-        repository: OT-OpenTwin/OpenTwin
-        ref: Ci
-        path: OpenTwin
+        version: '5.15.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
 
-    # Step 2: Check out the third-party repository
-    - name: Check out the third-party repository
-      uses: actions/checkout@v2
-      with:
-        repository: OT-OpenTwin/ThirdParty
-        path: ThirdParty
-        fetch-depth: 1  # Limit fetching to the last commit
-
-    # Step 3: Install Rust 1.76.0
-    - name: Install Rust 1.76.0
+    - name: Install Qt Visual Studio Tools
       run: |
-        choco install rust --version=1.76.0 -y
-      shell: cmd
-   
-    - name: Add Visual Studio to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+        curl -LO https://download.qt.io/official_releases/vsaddin/2.9.2/QtVsTools-2.9.2.vsix
+        mkdir -p C:\qtvsaddin
+        copy QtVsTools-2.9.2.vsix C:\qtvsaddin
+        "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\VSIXInstaller.exe" /quiet C:\qtvsaddin\QtVsTools-2.9.2.vsix
 
-    - name: Debug - List repository files
-      run: dir /s
-      shell: cmd
-
-    - name: Setup and Execute Build
-      shell: cmd
+    - name: Configure CMake
       run: |
-        echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
-        set DEVENV_ROOT_2022=%DEVENV_PATH%
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
-        echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
-        echo "Checking directories and necessary files..."
-        echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
-        dir %OPENTWIN_DEV_ROOT%
-        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
-        dir %OPENTWIN_THIRDPARTY_ROOT%
-        echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
-        dir "%DEVENV_ROOT_2022%"
-        echo "Checking if BuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
-          echo "BuildAll.bat exists. Starting BuildAll.bat..."
-          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
-        ) else (
-          echo "BuildAll.bat does not exist."
-          exit /b 1
-        )
-        echo "Checking if RebuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
-          echo "RebuildAll.bat exists."
-        ) else (
-          echo "RebuildAll.bat does not exist."
-        )
-        echo "Checking if CheckForFailedBuilds.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
-          echo "CheckForFailedBuilds.bat exists."
-        ) else (
-          echo "CheckForFailedBuilds.bat does not exist."
-        )
-        echo "All checks passed."
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\msvc2019_64" ..
 
-    - name: Build
-      shell: cmd
+    - name: Build with Visual Studio
       run: |
-        "%DEVENV_PATH%" "%PROJECT_FILE_PATH%" /Build "%BUILD_CONFIGURATION%"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" build\<YourProjectName>.sln /rebuild Release
