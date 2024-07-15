@@ -10,6 +10,7 @@ env:
   DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
   DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
   QT_PATH: C:\Qt\6.6.1\msvc2019_64
+  QT_MSBUILD: C:\Qt\6.6.1\msvc2019_64
 
 permissions:
   contents: read
@@ -21,7 +22,7 @@ jobs:
     steps:
     # Step 1: Check out the main project repository
     - name: Check out the main project repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
@@ -29,7 +30,7 @@ jobs:
 
     # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v2
       with:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
@@ -84,6 +85,7 @@ jobs:
         set DEVENV_ROOT_2022=%DEVENV_PATH%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         set QT_PATH=C:\Qt\6.6.1\msvc2019_64
+        set QT_MSBUILD=%QT_PATH%
         set PATH=%QT_PATH%\bin;%PATH%
         set QTDIR=%QT_PATH%
         set QMAKESPEC=win32-msvc
@@ -92,6 +94,7 @@ jobs:
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
         echo "QT_PATH=%QT_PATH%"
+        echo "QT_MSBUILD=%QT_MSBUILD%"
         echo "Checking directories and necessary files..."
         echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
         dir %OPENTWIN_DEV_ROOT%
