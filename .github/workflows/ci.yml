@@ -28,13 +28,7 @@ jobs:
         ref: Ci
         path: OpenTwin
 
-    # Step 2: Check out the third-party repository
-    - name: Check out the third-party repository
-      uses: actions/checkout@v2
-      with:
-        repository: OT-OpenTwin/ThirdParty
-        path: ThirdParty
-        fetch-depth: 1  # Limit fetching to the last commit
+   
 
     # Step 3: Install Rust 1.76.0
     - name: Install Rust 1.76.0
@@ -83,7 +77,6 @@ jobs:
         echo "Current directory: %cd%"
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
         set DEVENV_ROOT_2022=%DEVENV_PATH%
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         set QT_PATH=C:\Qt\6.6.1\msvc2019_64
         set QT_MSBUILD=%QT_PATH%
         set PATH=%QT_PATH%\bin;%PATH%
@@ -92,19 +85,17 @@ jobs:
         set QT_PLUGIN_PATH=%QT_PATH%\plugins
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
-        echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
         echo "QT_PATH=%QT_PATH%"
         echo "QT_MSBUILD=%QT_MSBUILD%"
         echo "Checking directories and necessary files..."
         echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
         dir %OPENTWIN_DEV_ROOT%
-        echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
-        dir %OPENTWIN_THIRDPARTY_ROOT%
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir "%DEVENV_ROOT_2022%"
         echo "Checking if BuildAll.bat exists..."
         echo "Starting BuildAll.bat..."
-        call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
+        "%DEVENV_ROOT_2022%\devenv.com" "%OPENTWIN_DEV_ROOT%\Libraries\OTWidgets\OTWidgets.vcxproj" %TYPE% "Debug|x64" 
+
         echo "All checks passed."
 
     - name: Upload build log summary artifact
