@@ -2,9 +2,9 @@ name: MSBuild
 
 on:
   push:
-    branches: [ "Demo" ]
+    branches: [ "AWSDemo" ]
   pull_request:
-    branches: [ "Demo" ]
+    branches: [ "AWSDemo" ]
 
 env:
   DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
