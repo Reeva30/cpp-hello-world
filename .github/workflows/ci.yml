@@ -28,9 +28,11 @@ jobs:
       shell: cmd
       run: |
         curl -LO https://download.qt.io/official_releases/vsaddin/2.9.2/QtVsTools-2.9.2.vsix
-        if not exist "C:\qtvsaddin" mkdir C:\qtvsaddin
-        copy QtVsTools-2.9.2.vsix C:\qtvsaddin\
-        "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\VSIXInstaller.exe" /quiet C:\qtvsaddin\QtVsTools-2.9.2.vsix
+        if not exist "C:\qtvsaddin" mkdir "C:\qtvsaddin"
+        copy "QtVsTools-2.9.2.vsix" "C:\qtvsaddin\"
+        set VSIXInstallerPath="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\VSIXInstaller.exe"
+        if not exist %VSIXInstallerPath% set VSIXInstallerPath="C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\VSIXInstaller.exe"
+        if exist %VSIXInstallerPath% (%VSIXInstallerPath% /quiet C:\qtvsaddin\QtVsTools-2.9.2.vsix) else (echo VSIXInstaller.exe not found)
 
     - name: Set Qt path and refresh
       run: |
