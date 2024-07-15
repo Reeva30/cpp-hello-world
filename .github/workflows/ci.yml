@@ -142,6 +142,7 @@ jobs:
         set DEVENV_ROOT_2022=%DEVENV_PATH%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
         set QtMsBuild=%cd%\ThirdParty\Qt\6.6.1\msvc2019_64
+        set PATH=%QtMsBuild%\bin;%PATH%
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
