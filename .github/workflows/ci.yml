@@ -19,10 +19,11 @@ jobs:
         arch: 'win64_msvc2019_64'
 
     - name: Install Qt Visual Studio Tools
+      shell: cmd
       run: |
         curl -LO https://download.qt.io/official_releases/vsaddin/2.9.2/QtVsTools-2.9.2.vsix
-        mkdir -p C:\qtvsaddin
-        copy QtVsTools-2.9.2.vsix C:\qtvsaddin
+        mkdir C:\qtvsaddin
+        copy QtVsTools-2.9.2.vsix C:\qtvsaddin\
         "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\VSIXInstaller.exe" /quiet C:\qtvsaddin\QtVsTools-2.9.2.vsix
 
     - name: Configure CMake
