@@ -1,6 +1,10 @@
-name: Build Qt Project with Visual Studio
+name: Compile and Release Qt6 Project
 
-on: [push, pull_request]
+on: push
+
+env:
+  QT_VERSION: "6.2.0"
+  BUILD_TYPE: Release
 
 jobs:
   build:
@@ -13,25 +17,47 @@ jobs:
     - name: Setup Qt
       uses: jurplel/install-qt-action@v2
       with:
-        version: '5.15.2'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
+        host: windows
+        target: "desktop"
+        version: ${{ env.QT_VERSION }}
+        arch: "win64_msvc2019_64"
+        dir: "${{github.workspace}}/qt"
+        install-deps: "true"
 
     - name: Install Qt Visual Studio Tools
       shell: cmd
       run: |
         curl -LO https://download.qt.io/official_releases/vsaddin/2.9.2/QtVsTools-2.9.2.vsix
-        mkdir C:\qtvsaddin
+        if not exist "C:\qtvsaddin" mkdir C:\qtvsaddin
         copy QtVsTools-2.9.2.vsix C:\qtvsaddin\
         "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\VSIXInstaller.exe" /quiet C:\qtvsaddin\QtVsTools-2.9.2.vsix
 
-    - name: Configure CMake
+    - name: Set Qt path and refresh
       run: |
-        mkdir build
-        cd build
-        cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\msvc2019_64" ..
+        echo "${{github.workspace}}/qt/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        refreshenv
 
-    - name: Build with Visual Studio
+    - name: Configure CMake Project
       run: |
-        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" build\<YourProjectName>.sln /rebuild Release
+        cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{github.workspace}}/qt/Qt/${{ env.QT_VERSION }}/msvc2019_64" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -B ${{github.workspace}}/build
+
+    - name: Build project
+      run: |
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" ${{github.workspace}}/build/<YourProjectName>.sln /rebuild Release
+
+    - name: Compress portable program
+      run: |
+        mkdir ${{github.workspace}}\build\all\
+        cp ${{github.workspace}}/build/Release/<YourExecutable>.exe ${{github.workspace}}\build\all\
+        cd ${{github.workspace}}\build\all\
+        windeployqt.exe <YourExecutable>.exe --release
+        ls
+        Compress-Archive -Path ${{github.workspace}}\build\all\ -DestinationPath ${{github.workspace}}\build\final.zip
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: ${{github.workspace}}/build/final.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
