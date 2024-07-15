@@ -141,6 +141,7 @@ jobs:
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
         set DEVENV_ROOT_2022=%DEVENV_PATH%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
+        set QtMsBuild=%cd%\ThirdParty\Qt\6.6.1\msvc2019_64
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
@@ -149,6 +150,8 @@ jobs:
         dir %OPENTWIN_DEV_ROOT%
         echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
         dir %OPENTWIN_THIRDPARTY_ROOT%
+        echo "qt directory: %QtMsBuild%"
+        dir %QtMsBuild%
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir "%DEVENV_ROOT_2022%"
         echo "Checking if BuildAll.bat exists..."
