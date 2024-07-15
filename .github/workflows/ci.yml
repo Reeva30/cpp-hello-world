@@ -1,6 +1,18 @@
-name: Setup and Build with Visual Studio 2022
+name: MSBuild
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "Demo" ]
+  pull_request:
+    branches: [ "Demo" ]
+
+env:
+  DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
+  DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
+  QT_PATH: C:\Qt\6.6.1\msvc2019_64
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -9,7 +21,7 @@ jobs:
     steps:
     # Step 1: Check out the main project repository
     - name: Check out the main project repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: OT-OpenTwin/OpenTwin
         ref: Ci
@@ -17,7 +29,7 @@ jobs:
 
     # Step 2: Check out the third-party repository
     - name: Check out the third-party repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: OT-OpenTwin/ThirdParty
         path: ThirdParty
@@ -29,46 +41,57 @@ jobs:
         choco install rust --version=1.76.0 -y
       shell: cmd
 
-    # Step 4: Install Visual Studio 2022 Community
-    - name: Install Visual Studio 2022 Community
+    # Step 4: Install Qt
+    - name: Install Qt 6.6.1
       run: |
-        choco install visualstudio2022community --package-parameters "--installPath C:\VS2022 --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended" -y
+        choco install qt --version=6.6.1 -y
       shell: cmd
-    
-    # Step 5: Add MSBuild to PATH
-    - name: Add MSBuild to PATH
+
+    - name: Add Visual Studio to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Debug - List repository files
+      run: dir /s
+      shell: cmd
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14' # specify the version you need
+
+    - name: Install Yarn
+      run: npm install -g yarn
+
+    - name: Install dependencies
+      run: yarn install
+      
+    # Install Python and Sphinx
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Sphinx and dependencies
       run: |
-        echo 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin' | Out-File -Append -FilePath $env:GITHUB_PATH
-      shell: pwsh
+        python -m pip install --upgrade pip
+        pip install sphinx sphinx-rtd-theme
 
-    # Step 6: Print PATH variable
-    - name: Print PATH variable
-      run: echo $env:Path
-      shell: pwsh
-
-    # Step 7: Check directory contents
-    - name: Check directory contents
-      run: |
-        $msbuildDir = 'C:\VS2022\Common7\IDE' 
-        if (Test-Path $msbuildDir) {
-          Get-ChildItem -Path $msbuildDir
-        } else {
-          Write-Output "MSBuild directory not found at $msbuildDir"
-          exit 1
-        }
-      shell: pwsh
-
-    # Step 8: Set environment variables, check paths, and run BuildAll.bat
     - name: Setup and Execute Build
+      shell: cmd
       run: |
-        cd OpenTwin
         echo "Current directory: %cd%"
-        set OPENTWIN_DEV_ROOT=%cd%
-        set DEVENV_ROOT_2022=C:\VS2022\Common7\IDE
-        set OPENTWIN_THIRDPARTY_ROOT=%cd%\..\ThirdParty
+        set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
+        set DEVENV_ROOT_2022=%DEVENV_PATH%
+        set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
+        set QT_PATH=C:\Qt\6.6.1\msvc2019_64
+        set PATH=%QT_PATH%\bin;%PATH%
+        set QTDIR=%QT_PATH%
+        set QMAKESPEC=win32-msvc
+        set QT_PLUGIN_PATH=%QT_PATH%\plugins
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
+        echo "QT_PATH=%QT_PATH%"
         echo "Checking directories and necessary files..."
         echo "OpenTwin directory: %OPENTWIN_DEV_ROOT%"
         dir %OPENTWIN_DEV_ROOT%
@@ -77,25 +100,27 @@ jobs:
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir "%DEVENV_ROOT_2022%"
         echo "Checking if BuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat (
-          echo "BuildAll.bat exists. Starting BuildAll.bat..."
-          call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
-        ) else (
-          echo "BuildAll.bat does not exist."
-          exit /b 1
-        )
-        echo "Checking if RebuildAll.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\RebuildAll.bat (
-          echo "RebuildAll.bat exists."
-        ) else (
-          echo "RebuildAll.bat does not exist."
-        )
-        echo "Checking if CheckForFailedBuilds.bat exists..."
-        if exist %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\CheckForFailedBuilds.bat (
-          echo "CheckForFailedBuilds.bat exists."
-        ) else (
-          echo "CheckForFailedBuilds.bat does not exist."
-        )
+        echo "Starting BuildAll.bat..."
+        call %OPENTWIN_DEV_ROOT%\Scripts\BuildAndTest\BuildAll.bat 
         echo "All checks passed."
-      shell: cmd
-      continue-on-error: true
+
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-Debug
+        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Debug.txt
+
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-Release
+        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Release.txt
+
+    - name: Upload build log summary artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-log-summary
+        path: ${{ github.workspace }}\OpenTwin\Scripts\BuildAndTest\buildLog_Summary.txt
