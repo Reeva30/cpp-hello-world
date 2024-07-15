@@ -36,7 +36,14 @@ jobs:
         choco install rust --version=1.76.0 -y
       shell: cmd
 
- # Step 4: Install Qt using install-qt-action
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.6.1'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
@@ -92,12 +99,12 @@ jobs:
         dir %OPENTWIN_DEV_ROOT%
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir "%DEVENV_ROOT_2022%"
-         echo "Qt directory: %QT_ROOT_DIR%"
+        echo "Qt directory: %QT_ROOT_DIR%"
         dir "%QT_ROOT_DIR%"
         echo "Checking if BuildAll.bat exists..."
         echo "Starting BuildAll.bat..."
-        "%DEVENV_ROOT_2022%\devenv.com" "%OPENTWIN_DEV_ROOT%\Libraries\OTWidgets\OTWidgets.vcxproj" %TYPE% "Debug|x64" 
-
+        "%DEVENV_ROOT_2022%\devenv.com" "%OPENTWIN_DEV_ROOT%\Libraries\OTWidgets\OTWidgets.vcxproj" %TYPE% "Debug|x64"
         echo "All checks passed."
+
 
   
