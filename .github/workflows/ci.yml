@@ -9,7 +9,7 @@ on:
 env:
   DEVENV_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE
   DEVENV_PATH2: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.com
-  QT_PATH: ${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64
+  QTDIR: C:\Qt\5.15.2\mingw81_64
 
 
 permissions:
@@ -73,53 +73,42 @@ jobs:
         python -m pip install --upgrade pip
         pip install sphinx sphinx-rtd-theme
 
+    - name: Install Chocolatey
+      run: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        version:      6.4.3
-        host:         windows
-        target:       desktop
-        arch:         win64_msvc2019_64
-        dir:          ${{ runner.temp }}
-        setup-python: false 
+      run: choco install qt5-default --params "/InstallDir:C:\Qt"
 
+    - name: Install Qt Creator
+      run: choco install qtcreator
+
+    - name: Set Qt environment variables
+      shell: powershell
+      run: |
+        echo "C:\Qt\5.15.2\mingw81_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "C:\Qt\5.15.2\mingw81_64\lib" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "C:\Qt\5.15.2\mingw81_64\include" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        [Environment]::SetEnvironmentVariable('QTDIR', 'C:\Qt\5.15.2\mingw81_64', 'Machine')
+        [Environment]::SetEnvironmentVariable('PATH', $env:PATH + ';C:\Qt\5.15.2\mingw81_64\bin', 'Machine')
+ 
+    - name: Refresh environment variables
+      shell: powershell
+      run: |
+        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+        refreshenv
+ 
+    - name: Verify Qt installation and paths
+      run: |
+        echo %QTDIR%
+        echo %PATH%
+        dir C:\Qt\5.15.2\mingw81_64
         
-    - name: Set Environment Variables for Qt and MSBuild
-      shell: pwsh
-      run: |
-          $Env:QT_PATH = "${{ github.workspace }}\ThirdParty\Qt\6.6.1\msvc2019_64"
-          $Env:QtToolsPath = "$Env:QT_PATH\bin"
-          $Env:QtMsBuild = "${{ github.workspace }}\ThirdParty\QtMsBuild"
-          $Env:PATH = "$Env:QT_PATH\bin;$Env:QtMsBuild;$Env:MSBUILD_PATH;$Env:PATH"
-
-          echo "QT_PATH=$Env:QT_PATH" >> $GITHUB_ENV
-          echo "QtToolsPath=$Env:QtToolsPath" >> $GITHUB_ENV
-          echo "QtMsBuild=$Env:QtMsBuild" >> $GITHUB_ENV
-          echo "PATH=$Env:PATH" >> $GITHUB_ENV
-
-    - name: Verify Qt Setup
-      shell: pwsh
-      run: |
-          Write-Host "Verifying Qt setup..."
-          if (-Not $Env:QT_PATH) {
-            Write-Host "QT_PATH is not set."
-            exit 1
-          }
-          if (-Not (Get-Command qmake -ErrorAction SilentlyContinue)) {
-            Write-Host "qmake could not be found"
-            exit 1
-          }
-          if (-Not (Get-Command moc -ErrorAction SilentlyContinue)) {
-            Write-Host "moc could not be found"
-            exit 1
-          }
-          if (-Not (Get-Command uic -ErrorAction SilentlyContinue)) {
-            Write-Host "uic could not be found"
-            exit 1
-          }
-          Write-Host "Qt setup verified successfully."
-
-
+    - name: Set up MSVC environment
+      shell: cmd
+      run: call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+        
 
 
 
@@ -131,10 +120,13 @@ jobs:
         set OPENTWIN_DEV_ROOT=%cd%\OpenTwin
         set DEVENV_ROOT_2022=%DEVENV_PATH%
         set OPENTWIN_THIRDPARTY_ROOT=%cd%\ThirdParty
-        set QtMsBuild=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64
-        set PATH=%QtMsBuild%\bin;%PATH%
-        echo "QTDIR=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64" >> $GITHUB_ENV
-        echo "QtToolsPath=${{ runner.temp }}/Qt/${{ env.QT_VERSION }}/msvc2019_64/bin" >> $GITHUB_ENV
+        set INCLUDE=%QTDIR%\include;%INCLUDE%
+        set LIB=%QTDIR%\lib;%LIB%
+        set PATH=%QTDIR%\bin;%PATH%
+        echo %INCLUDE%
+        echo %LIB%
+        echo %PATH%
+        
         echo "OPENTWIN_DEV_ROOT=%OPENTWIN_DEV_ROOT%"
         echo "DEVENV_ROOT_2022=%DEVENV_ROOT_2022%"
         echo "OPENTWIN_THIRDPARTY_ROOT=%OPENTWIN_THIRDPARTY_ROOT%"
@@ -143,8 +135,6 @@ jobs:
         dir %OPENTWIN_DEV_ROOT%
         echo "ThirdParty directory: %OPENTWIN_THIRDPARTY_ROOT%"
         dir %OPENTWIN_THIRDPARTY_ROOT%
-        echo "qt directory: %QtMsBuild%"
-        dir %QtMsBuild%
         echo "Visual Studio 2022 directory: %DEVENV_ROOT_2022%"
         dir "%DEVENV_ROOT_2022%"
         echo "Checking if BuildAll.bat exists..."
